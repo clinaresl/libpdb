@@ -14,10 +14,14 @@
 #define _NPANCAKE_T_H_
 
 #include<algorithm>
+#include <cstdint>
 #include<iostream>
 #include<iterator>
 #include<string>
 #include<vector>
+
+// Definition of variants
+enum class npancake_variant { unit, heavy_cost };
 
 // Class definition
 //
@@ -44,7 +48,7 @@ private:
     //    W. 2014. Bounded suboptimal search in linear space: New results. In
     //    Proceedings of SoCS-14.
     //
-    static std::string _variant;
+    static npancake_variant _variant;
 
     // In case an inconsistent heuristic is used, it is the max between the gap
     // heuristic of the permutation and the gap heuristic of the dual
@@ -126,7 +130,7 @@ public:
     const std::vector<int>& get_perm () const {
         return _perm;
     }
-    static const std::string& get_variant () {
+    static const npancake_variant get_variant () {
         return _variant;
     }
 
@@ -168,24 +172,26 @@ public:
     // methods
 
     // Invoke this service before using any other services of the npancake_t
-    static void init (const std::string& variant = "unit") {
+    static void init (const npancake_variant variant = npancake_variant::unit) {
 
         // copy the domain variant
         npancake_t::_variant = variant;
     }
 
-    // return the children of this state
-    void children (std::vector<npancake_t>& successors) {
+    // return the children of this state as a vector of tuples with two
+    // elements: first, the g-value of each node, and then the node itself
+    void children (std::vector<std::tuple<uint8_t, npancake_t>>& successors) {
 
         // for all locations
         for (auto i=1; i < _n; i++) {
 
-            // add the successor that results after flipping the first (i+1)
-            // discs
-            successors.push_back (npancake_t (_flip (i)));
+            // Add this successor to the vector of successors along with its
+            // cost
+            successors.push_back (std::tuple<uint8_t, npancake_t>{
+                    (_variant == npancake_variant::unit) ? 1 : ((i==_n-1) ? _n+1 : _perm[1+i]),
+                    npancake_t (_flip (i))});
         }
     }
-
 }; // class npancake_t
 
 namespace std {

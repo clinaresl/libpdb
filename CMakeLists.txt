@@ -22,8 +22,8 @@ add_subdirectory (src)
 add_subdirectory (domains)
 
 # add the tests only in case they have not been disabled
-# if (NOT DISABLE_TESTS)
-#     add_subdirectory (tests)
-# else()
-#     message(STATUS "Tests disabled")
-# endif()
+if (NOT DISABLE_TESTS)
+    add_subdirectory (tests)
+else()
+    message(STATUS "Tests disabled")
+endif()

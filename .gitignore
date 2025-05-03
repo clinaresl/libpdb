@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+# Tests
+gtest
+
+# --cmake
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+
+# --python
+__pycache__
+
+# projectile TAGS
+TAGS

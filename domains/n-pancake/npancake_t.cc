@@ -16,7 +16,7 @@ using namespace std;
 
 // Static vars
 int npancake_t::_n = 0;
-string npancake_t::_variant = "unit";
+npancake_variant npancake_t::_variant = npancake_variant::unit;
 
 
 // Local Variables:

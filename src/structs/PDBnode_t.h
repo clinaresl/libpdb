@@ -16,16 +16,9 @@
 #include <stdint.h>
 #include <vector>
 
-namespace pdb {
+#include "../PDBdefs.h"
 
-    // Type constraints
-    //
-    // nodes are generated over a predefined type that has to provide a number
-    // of methods so that PDBs can use it to construct the pattern database
-    template<typename T>
-    concept pdb_type = requires (T item, std::vector<std::tuple<uint8_t, T>> successors) {
-        item.children (successors);
-    };
+namespace pdb {
 
     template <pdb_type T>
     class node_t {

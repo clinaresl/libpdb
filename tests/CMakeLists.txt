@@ -13,7 +13,7 @@ add_executable(gtest
   gtest.cc
   TSThelpers.cc
   structs/TSTnode_t.cc
-  # structs/TSTbucket_t.cc
+  structs/TSTopen_t.cc
   ../domains/n-pancake/npancake_t.cc
   domains/TSTnpancake.cc
   # ../domains/n-puzzle/npuzzle_t.cc

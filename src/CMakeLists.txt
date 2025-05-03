@@ -1,19 +1,9 @@
 # Create a library called libpdb which includes its source files
 add_library (pdb
   pdb.h
-  # KHSdefs.h
+  PDBdefs.h
   structs/PDBnode_t.h
-  # structs/KHSbacknode_t.h
-  # structs/KHSlabelednode_t.h
-  # structs/KHSbucket_t.h
-  # structs/KHSsolution_t.h
-  # structs/KHSksolution_t.h
-  # structs/KHSIBaseNode.h
-  # algorithm/KHSbsolver.h
-  # algorithm/KHSmA.h
-  # algorithm/KHSbela.h
-  # algorithm/KHSIK.h
-  # algorithm/KHSIKStar.h
+  structs/PDBopen_t.h
   )
 
 # Generate the main header file from its template

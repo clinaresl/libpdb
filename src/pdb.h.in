@@ -7,7 +7,7 @@
 //
 
 //
-// Description
+// Include files necessary to use libpdb
 //
 
 #ifndef _PDB_H_

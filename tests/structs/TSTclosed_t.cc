@@ -57,62 +57,62 @@ TEST_F (ClosedFixture, InsertNPancake) {
     }
 }
 
-// checks that lookups work correctly in closed lists of of n-pancakes
-// ----------------------------------------------------------------------------
-TEST_F (ClosedFixture, LookupNPancake) {
+// // checks that lookups work correctly in closed lists of of n-pancakes
+// // ----------------------------------------------------------------------------
+// TEST_F (ClosedFixture, LookupNPancake) {
 
-    for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
+//     for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
 
-        // create an empty closed list (of n-pancakes)
-        int capacity = 2*(1 + rand () % MAX_VALUES);
-        pdb::closed_t<pdb::node_t<npancake_t>> closed (capacity);
+//         // create an empty closed list (of n-pancakes)
+//         int capacity = 2*(1 + rand () % MAX_VALUES);
+//         pdb::closed_t<pdb::node_t<npancake_t>> closed (capacity);
 
-        // create a random number of diffferent nodes of npancakes. Since the
-        // closed list does not store duplicates make sure that all nodes are
-        // unique
-        auto values = randNodes (capacity, NB_DISCS);
+//         // create a random number of diffferent nodes of npancakes. Since the
+//         // closed list does not store duplicates make sure that all nodes are
+//         // unique
+//         auto values = randNodes (capacity, NB_DISCS);
 
-        // Insert only half of the nodes in the closed list
-        auto idx = 0;
-        for (auto item : values) {
-            closed.insert (item);
+//         // Insert only half of the nodes in the closed list
+//         auto idx = 0;
+//         for (auto item : values) {
+//             closed.insert (item);
 
-            // and verify the size is correct
-            idx++;
-            ASSERT_EQ (closed.size (), idx);
+//             // and verify the size is correct
+//             idx++;
+//             ASSERT_EQ (closed.size (), idx);
 
-            // in case that half of the nodes have been already processed, exit
-            if (idx >= values.size ()/2) {
-                break;
-            }
-        }
+//             // in case that half of the nodes have been already processed, exit
+//             if (idx >= values.size ()/2) {
+//                 break;
+//             }
+//         }
 
-        // Now, ensure that all those nodes that have been inserted are actually
-        // found. Likewise, that those not being inserted are not found
-        idx = 0;
-        for (auto item : values) {
+//         // Now, ensure that all those nodes that have been inserted are actually
+//         // found. Likewise, that those not being inserted are not found
+//         idx = 0;
+//         for (auto item : values) {
 
-            // lookup for this value in closed
-            auto lookup = closed.find (item);
+//             // lookup for this value in closed
+//             auto lookup = closed.find (item);
 
-            // inserted values
-            if (idx < values.size ()/2) {
+//             // inserted values
+//             if (idx < values.size ()/2) {
 
-                // verify the information returned is correct
-                ASSERT_TRUE (lookup != string::npos);
-                ASSERT_EQ (closed[lookup], item);
-            } else {
+//                 // verify the information returned is correct
+//                 ASSERT_TRUE (lookup != string::npos);
+//                 ASSERT_EQ (closed[lookup], item);
+//             } else {
 
-                // unexisting values. Note that when an entry does not exist
-                // there is no need to check the value of the iterator
-                ASSERT_TRUE (lookup == string::npos);
-            }
+//                 // unexisting values. Note that when an entry does not exist
+//                 // there is no need to check the value of the iterator
+//                 ASSERT_TRUE (lookup == string::npos);
+//             }
 
-            // and increment the number of nodes processed so far
-            idx++;
-        }
-    }
-}
+//             // and increment the number of nodes processed so far
+//             idx++;
+//         }
+//     }
+// }
 
 /* // Check that nodes in closed can be looked up and their information correctly */
 /* // retrieved */

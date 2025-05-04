@@ -32,10 +32,17 @@ class npancake_t {
 
 private:
 
-    // INVARIANT: a state in the N pancake is characterized by its length n and
-    // a permutation of ints in the range [1, n]
+    // INVARIANT: an abstract state in the N pancake is characterized by its
+    // length n and a permutation of ints in the range [1, n] along with some
+    // abstracted symbols represented with pdb::NONPAT
     static int _n;                                 // length of the permutation
+    static int _nbsdiscs;                   // number of non-abstracted symbols
     std::vector<int> _perm;                                      // permutation
+
+    // to create the partial permutations representing a specific real state it
+    // is necessary to map the contents of non-abstracted symbols into its
+    // locations in the partial permutation
+    static std::vector<int> _omask;
 
     // this implementation acknowledges different variants:
     //
@@ -52,22 +59,9 @@ private:
     //
     static npancake_variant _variant;
 
-    // In case an inconsistent heuristic is used, it is the max between the gap
-    // heuristic of the permutation and the gap heuristic of the dual
-    // permutation. When computing the heuristic value all that is known is the
-    // heuristic estimate of the parent, and that is not sufficient to
-    // incrementally compute the gap heuristic of the permutation ---which is
-    // the only one that can be computed incrementally because the gap heuristic
-    // of the dual has to be computed from scratch for every successor. Hence,
-    // and additional data field is used to store separately the gap heuristic
-    // of the permutation. Because it is updated in the h function and
-    // libksearch requires h to be marked as constant, it is declared mutable
-    std::vector<int> _invperm;                               // inv permutation
-
     // methods
 
-    // flip the first k positions of this permutation. It does not affect the
-    // inverse permutation
+    // flip the first k positions of this permutation
     std::vector<int> _flip (int k) {
 
         std::vector<int> perm = _perm;
@@ -77,18 +71,6 @@ private:
         return perm;
     }
 
-    // return the inverse of this permutation
-    const std::vector<int> _inverse (std::vector<int>& perm) const {
-        std::vector<int> invperm = std::vector<int>(perm.size (), 0);
-
-        // note that all symbols in the inverse permutation should be also in
-        // the range [1, _n]
-        for (auto i = 0 ; i < _n ; i++) {
-            invperm[perm[i]-1] = 1+i;
-        }
-        return invperm;
-    }
-
 public:
 
     // Default constructors are forbidden by default
@@ -96,38 +78,65 @@ public:
 
     // A permutation can be constructed from a vector of integers. This
     // constructor assumes that all integers are distinct and belong to the
-    // range [1, n]. It automatically computes the inverse of the given
-    // permutation
+    // range [1, n] and a number of abstracted symbols represented with
+    // pdb::NONPAT. It also takes care to update the assignment of locations of
+    // non-abstracted symbols to locations in the partial permutation, _omask
     npancake_t (std::vector<int> perm) :
-        _perm       { perm },
-        _invperm    { std::vector<int> (perm.size (), 0) }
+        _perm { perm }
         {
             // store the size of the permuation
             _n = perm.size ();
 
-            // and compute the inverse of this permutation
-            _invperm = _inverse (perm);
+            // and compute the number of non-abstracted symbols
+            for (auto i = 0, _nbsdiscs = 0 ; i < _n ; i++) {
+                if (_perm[i] != pdb::NONPAT) {
+                    _nbsdiscs++;
+                }
+            }
+
+            // compute the mask that maps non-abstracted symbols to locations in
+            // the final partial permutation
+            _omask = std::vector<int>(_n, -1);
+            for (auto i = 0 ; i < _n ; i++) {
+                if (_perm[i] != pdb::NONPAT) {
+                    _omask[_perm[i]] = _n-_nbsdiscs + i;
+                }
+            }
         }
 
-    // And also with an initializer list. It automatically computes the inverse
-    // of the given permutation
+    // And also with an initializer list. It automatically computes the number
+    // of non-abstracted symbols. It also takes care to update the assignment of
+    // locations of non-abstracted symbols to locations in the partial
+    // permutation, _omask
     npancake_t (std::initializer_list<int> perm) :
-        _perm       { perm },
-        _invperm    { std::vector<int> (perm.size (), 0) }
+        _perm { perm }
         {
             // store the size of the permuation
             _n = perm.size ();
 
-            // and compute the inverse of this permutation
-            _invperm = _inverse (_perm);
+            // and compute the number of non-abstracted symbols
+            for (auto i = 0, _nbsdiscs = 0 ; i < _n ; i++) {
+                if (_perm[i] != pdb::NONPAT) {
+                    _nbsdiscs++;
+                }
+            }
+
+            // compute the mask that maps non-abstracted symbols to locations in
+            // the final partial permutation
+            _omask = std::vector<int>(_n, -1);
+            for (auto i = 0 ; i < _n ; i++) {
+                if (_perm[i] != pdb::NONPAT) {
+                    _omask[_perm[i]] = _n-_nbsdiscs + i;
+                }
+            }
         }
 
     // getters
     static int get_n () {
         return _n;
     }
-    const std::vector<int>& get_invperm () const {
-        return _invperm;
+    static int get_nbsdiscs () {
+        return _nbsdiscs;
     }
     const std::vector<int>& get_perm () const {
         return _perm;
@@ -181,7 +190,8 @@ public:
     }
 
     // return the children of this state as a vector of tuples with two
-    // elements: first, the g-value of each node, and then the node itself
+    // elements: first, the g-value of each node, and then the node itself. The
+    // inverse permutation of the children is automatically computed
     void children (std::vector<std::tuple<uint8_t, npancake_t>>& successors) {
 
         // for all locations
@@ -195,11 +205,55 @@ public:
         }
     }
 
-    // use the Myrvold&Ruskey function to compute the ranking of the permutation
-    // of this instance. The value returned is used to index instances of
-    // npancake_t in a Pattern Database
-    pdboff_t rank_pdb () const {
-        return 0;
+    // use the iterative implementation of Myrvold&Ruskey ranking function to
+    // compute the ranking of the partial permutation of this instance. The
+    // value returned is used to index instances of npancake_t in a Pattern
+    // Database
+    pdb::pdboff_t rank_pdb () const {
+
+        int s, w;
+        int n = _n;
+
+        // initialize the rank of the permutation to 0 and also the series of
+        // factors to use
+        pdb::pdboff_t r = 0L;
+        pdb::pdboff_t f = 1L;
+
+        // create the (partial) permutation to rank, and compute also its
+        // inverse. Because the pattern is given in a partial permutation, all
+        // non-abstracted symbols are pushed to the end of the permutation
+        std::vector<int> p (_n);
+        std::vector<int> q (_n);
+        for (auto i = 0 ; i < _n ; i++) {
+
+            // in case this content is not abstracted
+            if (_perm[i] != pdb::NONPAT) {
+
+                // push it to the end of the partial permutation and store its
+                // location in the inverse permutation
+                p[_omask[_perm[i]]] = i;
+                q[i] = _omask[_perm[i]];
+            }
+        }
+
+        // compute the rank
+        while (n > _n - _nbsdiscs) {
+
+            // take the last element from the permutation and swap n-1 and
+            // q[n-1] in p
+            s = p[n-1];
+            w = p[n-1]; p[n-1] = p[q[n-1]]; p[q[n-1]] = w;
+
+            // next, swap s and n-1 in q
+            w = q[s]; q[s] = q[n-1]; q[n-1]=w;
+
+            // update the ranking
+            r += s*f; f *= n;
+
+            // and decrement the count of symbols to compute
+            n--;
+        }
+        return r;
     }
 
 }; // class npancake_t

@@ -15,43 +15,49 @@
 
 #include <cstdint>
 
-// Constants
-//
-// An entry equal to zero in the pattern database means unused entry. Because of
-// this, the g*-values of all entries in the PDB are incremented intentionally
-// in one unit and decreased only at the time they are written down to the file.
-constexpr uint8_t pdbzero = 0;
+namespace pdb {
 
-// Types of PDBs
-enum class pdb_mode {max, add};
+    // Constants
+    //
+    // Types of PDBs
+    enum class pdb_mode {max, add};
 
-// Type definitions
-//
-// indices to the pattern database are as long as size_t
-typedef unsigned long long int pdboff_t;
+    // An entry equal to zero in the pattern database means unused entry. Because of
+    // this, the g*-values of all entries in the PDB are incremented intentionally
+    // in one unit and decreased only at the time they are written down to the file.
+    constexpr uint8_t pdbzero = 0;
 
-// values stored in a pdb are (for the time being) unsigned bytes
-typedef uint8_t pdbval_t;
+    // An abstracted symbol is shown with NONPAT
+    constexpr uint8_t NONPAT = 0xff;
 
-// Type constraints
-//
-// PDB nodes are generated over a predefined type that has to provide a number
-// of services described below
-template<typename T>
-concept pdb_type = requires (T item, std::vector<std::tuple<uint8_t, T>> successors) {
+    // Type definitions
+    //
+    // indices to the pattern database are as long as size_t
+    typedef unsigned long long int pdboff_t;
 
-    // PDBs are created by running a backwards brute-force breadth-first search.
-    // It is necessary for the items to be able to compute their predecessors
-    // (here noted as successors)
-    item.children (successors);
+    // values stored in a pdb are (for the time being) unsigned bytes
+    typedef uint8_t pdbval_t;
 
-    // items are stored in a pdb using a perfect ranking function (e.g.,
-    // Myrvold&Ruskey or lexicographical ordering, which is worst ...). items
-    // therefore must be able to compute their own ranking which must be given
-    // as a value of type pdboff_t ---defined above
-    { item.rank_pdb () } -> std::same_as<pdboff_t>;
-};
+    // Type constraints
+    //
+    // PDB nodes are generated over a predefined type that has to provide a
+    // number of services described below
+    template<typename T>
+    concept pdb_type = requires (T item, std::vector<std::tuple<uint8_t, T>> successors) {
 
+        // PDBs are created by running a backwards brute-force breadth-first search.
+        // It is necessary for the items to be able to compute their predecessors
+        // (here noted as successors)
+        item.children (successors);
+
+        // items are stored in a pdb using a perfect ranking function (e.g.,
+        // Myrvold&Ruskey or lexicographical ordering, which is worst ...). items
+        // therefore must be able to compute their own ranking which must be given
+        // as a value of type pdboff_t ---defined above
+        { item.rank_pdb () } -> std::same_as<pdboff_t>;
+    };
+
+} // namespace pdb
 
 #endif // _PDBDEFS_H_
 

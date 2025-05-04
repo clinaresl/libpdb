@@ -16,6 +16,8 @@ using namespace std;
 
 // Static vars
 int npancake_t::_n = 0;
+int npancake_t::_nbsdiscs = 0;
+vector<int> npancake_t::_omask = vector<int>(_n, -1);
 npancake_variant npancake_t::_variant = npancake_variant::unit;
 
 

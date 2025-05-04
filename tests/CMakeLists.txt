@@ -18,7 +18,7 @@ add_executable(gtest
   domains/TSTnpancake.cc
   # ../domains/n-puzzle/npuzzle_t.cc
   # domains/TSTnpuzzle.cc
-  # structs/TSTclosed_t.cc
+  structs/TSTclosed_t.cc
 )
 
 target_link_libraries(gtest LINK_PUBLIC pdb GTest::gtest GTest::gtest_main)

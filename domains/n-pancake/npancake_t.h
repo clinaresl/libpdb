@@ -20,6 +20,8 @@
 #include<string>
 #include<vector>
 
+#include "../../src/PDBdefs.h"
+
 // Definition of variants
 enum class npancake_variant { unit, heavy_cost };
 
@@ -192,6 +194,14 @@ public:
                     npancake_t (_flip (i))});
         }
     }
+
+    // use the Myrvold&Ruskey function to compute the ranking of the permutation
+    // of this instance. The value returned is used to index instances of
+    // npancake_t in a Pattern Database
+    pdboff_t rank_pdb () const {
+        return 0;
+    }
+
 }; // class npancake_t
 
 namespace std {

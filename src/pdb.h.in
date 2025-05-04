@@ -22,6 +22,8 @@
 
 // --- node
 #include "structs/PDBnode_t.h"
+#include "structs/PDBopen_t.h"
+#include "structs/PDBclosed_t.h"
 
 #endif // _PDB_H_
 

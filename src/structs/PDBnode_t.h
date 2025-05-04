@@ -23,7 +23,7 @@ namespace pdb {
     template <pdb_type T>
     class node_t {
 
-        private:
+    private:
 
         // INVARIANT: a pdbnode contains a state of the original problem and
         // also its g-value. The g-value is always assumed to fit in an unsigned
@@ -31,7 +31,7 @@ namespace pdb {
         T _state;
         uint8_t _g;
 
-        public:
+    public:
 
         // Default constructors are forbidden
         node_t () = delete;
@@ -43,8 +43,11 @@ namespace pdb {
             {}
 
         // getters
-        const uint8_t get_g () const {
+        uint8_t get_g () const {
             return _g;
+        }
+        const T& get_state () const {
+            return _state;
         }
 
     }; // class node_t<pdb_type T>

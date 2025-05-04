@@ -55,6 +55,10 @@ std::vector<std::string> randVectorString (int n, int m, bool remove_duplicates=
 // create a random instance of the N-Pancake with the given length
 const npancake_t randInstance (int length);
 
+// return a vector of vectors of integers with all permutations of the symbols
+// in the range [1, N]
+std::vector<std::vector<int>> generatePermutations(int N);
+
 #endif // _TSTHELPERS_H_
 
 // Local Variables:

@@ -36,7 +36,7 @@ private:
     // length n and a permutation of ints in the range [1, n] along with some
     // abstracted symbols represented with pdb::NONPAT
     static int _n;                                 // length of the permutation
-    static int _nbsdiscs;                   // number of non-abstracted symbols
+    static int _nbsymbols;                   // number of non-abstracted symbols
     std::vector<int> _perm;                                      // permutation
 
     // to create the partial permutations representing a specific real state it
@@ -81,26 +81,13 @@ public:
     // range [1, n] and a number of abstracted symbols represented with
     // pdb::NONPAT. It also takes care to update the assignment of locations of
     // non-abstracted symbols to locations in the partial permutation, _omask
-    npancake_t (std::vector<int> perm) :
+    npancake_t (const std::vector<int> perm) :
         _perm { perm }
         {
-            // store the size of the permuation
-            _n = perm.size ();
-
-            // and compute the number of non-abstracted symbols
-            for (auto i = 0, _nbsdiscs = 0 ; i < _n ; i++) {
-                if (_perm[i] != pdb::NONPAT) {
-                    _nbsdiscs++;
-                }
-            }
-
-            // compute the mask that maps non-abstracted symbols to locations in
-            // the final partial permutation
-            _omask = std::vector<int>(_n, -1);
-            for (auto i = 0 ; i < _n ; i++) {
-                if (_perm[i] != pdb::NONPAT) {
-                    _omask[_perm[i]] = _n-_nbsdiscs + i;
-                }
+            // verify the size of the permutation is equal to the length of the
+            // pattern
+            if (_n != int (perm.size ())) {
+                throw std::invalid_argument ("The length of the permutation and the pattern are different!");
             }
         }
 
@@ -111,23 +98,10 @@ public:
     npancake_t (std::initializer_list<int> perm) :
         _perm { perm }
         {
-            // store the size of the permuation
-            _n = perm.size ();
-
-            // and compute the number of non-abstracted symbols
-            for (auto i = 0, _nbsdiscs = 0 ; i < _n ; i++) {
-                if (_perm[i] != pdb::NONPAT) {
-                    _nbsdiscs++;
-                }
-            }
-
-            // compute the mask that maps non-abstracted symbols to locations in
-            // the final partial permutation
-            _omask = std::vector<int>(_n, -1);
-            for (auto i = 0 ; i < _n ; i++) {
-                if (_perm[i] != pdb::NONPAT) {
-                    _omask[_perm[i]] = _n-_nbsdiscs + i;
-                }
+            // verify the size of the permutation is equal to the length of the
+            // pattern
+            if (_n != int (perm.size ())) {
+                throw std::invalid_argument ("The length of the permutation and the pattern are different!");
             }
         }
 
@@ -135,8 +109,8 @@ public:
     static int get_n () {
         return _n;
     }
-    static int get_nbsdiscs () {
-        return _nbsdiscs;
+    static int get_nbsymbols () {
+        return _nbsymbols;
     }
     const std::vector<int>& get_perm () const {
         return _perm;
@@ -164,7 +138,7 @@ public:
 
     // get the contents of the i-th location. In case i is out of bounds the
     // results are undefined
-    const int operator[](int i) const {
+    int operator[](int i) const {
         return _perm[i];
     }
 
@@ -182,11 +156,58 @@ public:
 
     // methods
 
-    // Invoke this service before using any other services of the npancake_t
-    static void init (const npancake_variant variant = npancake_variant::unit) {
+    // return the size of the address space that results of using this pattern.
+    // The address space is the interval [0, S) which corresponds to the ranking
+    // of all feasible permutations
+    static pdb::pdboff_t address_space () {
+
+        // Given n different symbols, k being preserved, the size of the address
+        // space is n!/(n-k)!
+        pdb::pdboff_t card = 1L;
+        for (auto i = _n ; i > _n-_nbsymbols ; i--) {
+            card *= i;
+        }
+        return card;
+    }
+
+    // Invoke this service before using any other services of the npancake_t. It
+    // sets the desired variant (unit by default) and, in addition it computes
+    // the number of symbols (i.e., items not abstracted away) from the given
+    // pattern and compute _omask, a vector which stores for every symbol its
+    // location in the partial permutation used to compute the rank of any
+    // permutation
+    static void init (const std::string pattern,
+                      const npancake_variant variant = npancake_variant::unit) {
 
         // copy the domain variant
         npancake_t::_variant = variant;
+
+        // set the size of all permutations to be equal to the length of the
+        // pattern
+        _n = pattern.size ();
+
+        // and compute the number of non-abstracted symbols
+        _nbsymbols = 0;
+        for (auto i = 0 ; i < _n ; i++) {
+
+            // If this symbol is preserved, update the number of symbols
+            if (pattern[i] == '-') {
+                _nbsymbols++;
+            }
+        }
+
+        // compute also the mask that maps symbols to locations in the final
+        // partial permutation
+        _omask = std::vector<int>(1+_n, -1);
+        for (auto i = 0 ; i < _n ; i++) {
+            if (pattern[i] == '-') {
+
+                // the pattern is defined wrt the identity permutation with the
+                // symbols [1, _n]. Thus, the i-th location refers to the symbol
+                // (1+i)
+                _omask[1+i] = _n-_nbsymbols + i;
+            }
+        }
     }
 
     // return the children of this state as a vector of tuples with two
@@ -237,7 +258,7 @@ public:
         }
 
         // compute the rank
-        while (n > _n - _nbsdiscs) {
+        while (n > _n - _nbsymbols) {
 
             // take the last element from the permutation and swap n-1 and
             // q[n-1] in p

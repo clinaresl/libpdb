@@ -1,6 +1,8 @@
 # Introduction
 
-`libpdb` provides means for creating Pattern Databases in different domains
+`libpdb` provides means for creating Pattern Databases in different permutation
+state spaces such as the N-Pancake or the sliding-tile puzzle. It supports both
+MAX and ADD pattern databases.
 
 # Dependencies
 

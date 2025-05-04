@@ -18,31 +18,50 @@
 
 using namespace std;
 
-// Check that instances are correctly recognized
+// Check that instances are correctly created with either the explicit
+// constructor or the copy constructor
+// ----------------------------------------------------------------------------
 TEST_F (NPancakeFixture, DefaultInstance) {
+
+    // Generate instances of the 40-Pancake. Since the panncake def contains a
+    // static vector whose size depends on the number of items, it is not
+    // possible to have several instances of Pancakes of different size
+    auto length = 40;
+    npancake_t::init (string (length, '-'));
 
     for (auto i = 0 ; i < NB_TESTS ; i++) {
 
+        // Explicit construction
+
         // create a random instance with at least 10 discs and no more than
         // NB_DISCS + 10
-        auto length = 10 + rand () % (NB_DISCS-10);
-        npancake_t instance = randInstance (length);
+        npancake_t instance1 = npancake_t (randVectorInt (length, length, true));
 
         // and verify the size is the chosen one
+        ASSERT_EQ (length, npancake_t::get_n ());
+
+        // Copy constructor
+        npancake_t instance2 = randInstance (length);
+
+        // and verify again the size is the chosen one
         ASSERT_EQ (length, npancake_t::get_n ());
     }
 }
 
 // Check that all successors are correctly generated in the unit variant
+// ----------------------------------------------------------------------------
 TEST_F (NPancakeFixture, SuccessorsUnit) {
+
+    // Generate instances of the 40-Pancake. Since the panncake def contains a
+    // static vector whose size depends on the number of items, it is not
+    // possible to have several instances of Pancakes of different size
+    auto length = 40;
+    npancake_t::init (string (length, '-'), npancake_variant::unit);
 
     for (auto i = 0 ; i < NB_TESTS ; i++ ) {
 
         // first, generate a random instance
-        npancake_t instance = randInstance (10 + rand () % (NB_DISCS-10));
-
-        // initialize the unit variant
-        npancake_t::init (npancake_variant::unit);
+        npancake_t instance = randInstance (length);
 
         // now, expand this node and generate all children
         vector<tuple<uint8_t, npancake_t>> successors;
@@ -74,15 +93,19 @@ TEST_F (NPancakeFixture, SuccessorsUnit) {
 }
 
 // Check that all successors are correctly generated in the heavy-cost variant
+// ----------------------------------------------------------------------------
 TEST_F (NPancakeFixture, SuccessorsHeavyCost) {
+
+    // Generate instances of the 40-Pancake. Since the panncake def contains a
+    // static vector whose size depends on the number of items, it is not
+    // possible to have several instances of Pancakes of different size
+    auto length = 40;
+    npancake_t::init (string (length, '-'), npancake_variant::heavy_cost);
 
     for (auto i = 0 ; i < NB_TESTS ; i++ ) {
 
         // first, generate a random instance
-        npancake_t instance = randInstance (10 + rand () % (NB_DISCS-10));
-
-        // initialize the heavy-cost variant
-        npancake_t::init (npancake_variant::heavy_cost);
+        npancake_t instance = randInstance (length);
 
         // now, expand this node and generate all children
         vector<tuple<uint8_t, npancake_t>> successors;
@@ -126,6 +149,40 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCost) {
     }
 }
 
+// Check that the ranking of full permutations is correct
+// ----------------------------------------------------------------------------
+TEST_F (NPancakeFixture, FullPermutations) {
+
+    // Test all the full permutations of the N-Pancake with 4<= N <= 10
+    for (auto length = 4 ; length <= 10 ; length++) {
+
+        auto permutations = generatePermutations (length);
+
+        // initialize the unit variant using a pattern that represents the full
+        // goal state
+        npancake_t::init (string (length, '-'), npancake_variant::unit);
+
+        // Verify first that the size of the address space equals the number of
+        // permutations generated
+        ASSERT_EQ (permutations.size (), npancake_t::address_space ());
+
+        // create an instance of the 10-Pancake with each permutation and verify
+        // that a unique index is generated in the range [0, n!)
+        vector<int> ranked (npancake_t::address_space (), 0);
+        for (const auto& ipermutation: permutations) {
+
+            // create an instance with this permutation
+            npancake_t instance (ipermutation);
+
+            // and verify now that its index has not been generated before
+            auto index = instance.rank_pdb ();
+            ASSERT_FALSE (ranked [index]);
+
+            // and now set it to true to check against the next values
+            ranked[index] = 1;
+        }
+    }
+}
 
 // Local Variables:
 // mode:cpp

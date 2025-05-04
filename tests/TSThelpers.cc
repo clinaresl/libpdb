@@ -146,6 +146,24 @@ const npancake_t randInstance (int length) {
     return result;
 }
 
+// return a vector of vectors of integers with all permutations of the symbols
+// in the range [1, N]
+std::vector<std::vector<int>> generatePermutations(int N) {
+    std::vector<std::vector<int>> result;
+    std::vector<int> nums;
+
+    // Initialize nums with [1, 2, ..., N]
+    for (int i = 1; i <= N; ++i) {
+        nums.push_back(i);
+    }
+
+    // Generate all permutations using std::next_permutation
+    do {
+        result.push_back(nums);
+    } while (std::next_permutation(nums.begin(), nums.end()));
+
+    return result;
+}
 
 // Local Variables:
 // mode:cpp

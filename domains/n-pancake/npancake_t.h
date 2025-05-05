@@ -7,7 +7,7 @@
 // Ian Herman <iankherman@gmail.com>   Ian Herman <iankherman@gmail.com>
 
 //
-// Definition of a state of the N-pancake
+// Definition of a state (either real or abstracted) of the N-pancake
 //
 
 #ifndef _NPANCAKE_T_H_
@@ -33,16 +33,13 @@ class npancake_t {
 private:
 
     // INVARIANT: an abstract state in the N pancake is characterized by its
-    // length n and a permutation of ints in the range [1, n] along with some
-    // abstracted symbols represented with pdb::NONPAT
+    // length n and a permutation of ints. In case the permutation represents a
+    // state in the real state space, only symbols in the range [1, n] are used;
+    // in case an abstracted state is specified in the permutation, then those
+    // contents which are abstracted should be given with the constant
+    // pdb::NONPAT
     static int _n;                                 // length of the permutation
-    static int _nbsymbols;                   // number of non-abstracted symbols
     std::vector<int> _perm;                                      // permutation
-
-    // to create the partial permutations representing a specific real state it
-    // is necessary to map the contents of non-abstracted symbols into its
-    // locations in the partial permutation
-    static std::vector<int> _omask;
 
     // this implementation acknowledges different variants:
     //
@@ -79,43 +76,28 @@ public:
     // A permutation can be constructed from a vector of integers. This
     // constructor assumes that all integers are distinct and belong to the
     // range [1, n] and a number of abstracted symbols represented with
-    // pdb::NONPAT. It also takes care to update the assignment of locations of
-    // non-abstracted symbols to locations in the partial permutation, _omask
-    npancake_t (const std::vector<int> perm) :
+    // pdb::NONPAT
+    npancake_t (const std::vector<int>& perm) :
         _perm { perm }
         {
-            // verify the size of the permutation is equal to the length of the
-            // pattern
-            if (_n != int (perm.size ())) {
-                throw std::invalid_argument ("The length of the permutation and the pattern are different!");
-            }
+            _n = perm.size ();
         }
 
-    // And also with an initializer list. It automatically computes the number
-    // of non-abstracted symbols. It also takes care to update the assignment of
-    // locations of non-abstracted symbols to locations in the partial
-    // permutation, _omask
+    // And also with an initializer list
     npancake_t (std::initializer_list<int> perm) :
         _perm { perm }
         {
-            // verify the size of the permutation is equal to the length of the
-            // pattern
-            if (_n != int (perm.size ())) {
-                throw std::invalid_argument ("The length of the permutation and the pattern are different!");
-            }
+            _n = perm.size ();
         }
 
     // getters
     static int get_n () {
         return _n;
     }
-    static int get_nbsymbols () {
-        return _nbsymbols;
-    }
     const std::vector<int>& get_perm () const {
         return _perm;
     }
-    static const npancake_variant get_variant () {
+    static npancake_variant get_variant () {
         return _variant;
     }
 
@@ -156,63 +138,17 @@ public:
 
     // methods
 
-    // return the size of the address space that results of using this pattern.
-    // The address space is the interval [0, S) which corresponds to the ranking
-    // of all feasible permutations
-    static pdb::pdboff_t address_space () {
-
-        // Given n different symbols, k being preserved, the size of the address
-        // space is n!/(n-k)!
-        pdb::pdboff_t card = 1L;
-        for (auto i = _n ; i > _n-_nbsymbols ; i--) {
-            card *= i;
-        }
-        return card;
-    }
-
     // Invoke this service before using any other services of the npancake_t. It
-    // sets the desired variant (unit by default) and, in addition it computes
-    // the number of symbols (i.e., items not abstracted away) from the given
-    // pattern and compute _omask, a vector which stores for every symbol its
-    // location in the partial permutation used to compute the rank of any
-    // permutation
-    static void init (const std::string pattern,
-                      const npancake_variant variant = npancake_variant::unit) {
+    // sets the desired variant (unit by default) which is required to properly
+    // compute the descendants of any state
+    static void init (const npancake_variant variant = npancake_variant::unit) {
 
         // copy the domain variant
         npancake_t::_variant = variant;
-
-        // set the size of all permutations to be equal to the length of the
-        // pattern
-        _n = pattern.size ();
-
-        // and compute the number of non-abstracted symbols
-        _nbsymbols = 0;
-        for (auto i = 0 ; i < _n ; i++) {
-
-            // If this symbol is preserved, update the number of symbols
-            if (pattern[i] == '-') {
-                _nbsymbols++;
-            }
-        }
-
-        // compute also the mask that maps symbols to locations in the final
-        // partial permutation
-        _omask = std::vector<int>(1+_n, -1);
-        for (auto i = 0 ; i < _n ; i++) {
-            if (pattern[i] == '-') {
-
-                // the pattern is defined wrt the identity permutation with the
-                // symbols [1, _n]. Thus, the i-th location refers to the symbol
-                // (1+i)
-                _omask[1+i] = _n-_nbsymbols + i;
-            }
-        }
     }
 
     // return the children of this state as a vector of tuples with two
-    // elements: first, the g-value of each node, and then the node itself. The
-    // inverse permutation of the children is automatically computed
+    // elements: first, the g-value of each node, and then the node itself
     void children (std::vector<std::tuple<uint8_t, npancake_t>>& successors) {
 
         // for all locations
@@ -226,82 +162,7 @@ public:
         }
     }
 
-    // use the iterative implementation of Myrvold&Ruskey ranking function to
-    // compute the ranking of the partial permutation of this instance. The
-    // value returned is used to index instances of npancake_t in a Pattern
-    // Database
-    pdb::pdboff_t rank_pdb () const {
-
-        int s, w;
-        int n = _n;
-
-        // initialize the rank of the permutation to 0 and also the series of
-        // factors to use
-        pdb::pdboff_t r = 0L;
-        pdb::pdboff_t f = 1L;
-
-        // create the (partial) permutation to rank, and compute also its
-        // inverse. Because the pattern is given in a partial permutation, all
-        // non-abstracted symbols are pushed to the end of the permutation
-        std::vector<int> p (_n);
-        std::vector<int> q (_n);
-        for (auto i = 0 ; i < _n ; i++) {
-
-            // in case this content is not abstracted
-            if (_perm[i] != pdb::NONPAT) {
-
-                // push it to the end of the partial permutation and store its
-                // location in the inverse permutation
-                p[_omask[_perm[i]]] = i;
-                q[i] = _omask[_perm[i]];
-            }
-        }
-
-        // compute the rank
-        while (n > _n - _nbsymbols) {
-
-            // take the last element from the permutation and swap n-1 and
-            // q[n-1] in p
-            s = p[n-1];
-            w = p[n-1]; p[n-1] = p[q[n-1]]; p[q[n-1]] = w;
-
-            // next, swap s and n-1 in q
-            w = q[s]; q[s] = q[n-1]; q[n-1]=w;
-
-            // update the ranking
-            r += s*f; f *= n;
-
-            // and decrement the count of symbols to compute
-            n--;
-        }
-        return r;
-    }
-
 }; // class npancake_t
-
-namespace std {
-
-    // Definition of a hash function for instances of the n-pancake. The
-    // definition is included in the std namespace so that it can be used
-    // directly by the functions implemented in that namespace
-    template<>
-    struct hash<::npancake_t> {
-
-        // hash function
-        size_t operator() (const npancake_t& right) const {
-
-            // return the hash value of the vector of integers representing this
-            // specific permutation
-            // https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector
-            size_t seed = right.get_perm ().size();
-            for(auto& i : right.get_perm ()) {
-                seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            }
-            return seed;
-        }
-
-    }; // struct hash<npancake_t>
-}
 
 #endif // _NPANCAKE_T_H_
 

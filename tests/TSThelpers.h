@@ -41,7 +41,7 @@ std::string randString (int length, std::string exclude="");
 // the string exclude
 std::string randString (int l0, int l1, std::string exclude="");
 
-// return a vector with a list of numbers from 0 up to n-1
+// return a vector with a list of numbers from 1 up to n
 std::vector<int> succListInt (int n);
 
 // return a vector with n numbers randomly generated in the interval [0, m). If

@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// TSTclosedfixture.h
+// TSTpdbfixture.h
 // -----------------------------------------------------------------------------
 //
 // Started on <dom 04-05-2025 01:08:18.302163524 (1746313698)>
@@ -7,13 +7,14 @@
 //
 
 //
-// Fixture used to test closed lists
+// Fixture used to test PDBs
 //
 
-#ifndef _TSTCLOSEDFIXTURE_H_
-#define _TSTCLOSEDFIXTURE_H_
+#ifndef _TSTPDBFIXTURE_H_
+#define _TSTPDBFIXTURE_H_
 
 #include<algorithm>
+#include<cstdint>
 #include<cstdlib>
 #include<ctime>
 #include<random>
@@ -23,13 +24,13 @@
 
 #include "../TSTdefs.h"
 #include "../TSThelpers.h"
-#include "../../src/structs/PDBclosed_t.h"
+#include "../../src/structs/PDBpdb_t.h"
 #include "../../domains/n-pancake/npancake_t.h"
 
 // Class definition
 //
-// Defines a Google test fixture for testing closed lists
-class ClosedFixture : public ::testing::Test {
+// Defines a Google test fixture for testing PDBs
+class PDBFixture : public ::testing::Test {
 
 protected:
 
@@ -40,8 +41,9 @@ protected:
         srand (time (nullptr));
     }
 
-    // Generate a vector with n random instances of nodes of the N-pancake with
-    // up to length discs each
+    // Generate a vector with n random different instances of nodes of the
+    // N-pancake with up to length discs, each with a different strictly
+    // positive g-value
     std::vector<pdb::node_t<npancake_t>> randNodes (const int n, const int length) {
 
         std::set<npancake_t> prev;
@@ -58,8 +60,11 @@ protected:
                 iperm = randInstance (length);
             }
 
+            // remember it has been generated
+            prev.insert (iperm);
+
             // and add it to the vector of instances to return
-            pdb::node_t<npancake_t> ipancake {iperm};
+            pdb::node_t<npancake_t> ipancake {iperm, uint8_t (1 + (rand ()%MAX_VALUES))};
             instances.push_back (ipancake);
         }
 
@@ -67,7 +72,7 @@ protected:
     }
 };
 
-#endif // _TSTCLOSEDFIXTURE_H_
+#endif // _TSTPDBFIXTURE_H_
 
 // Local Variables:
 // mode:cpp

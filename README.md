@@ -1,8 +1,11 @@
 # Introduction
 
 `libpdb` provides means for creating Pattern Databases in different permutation
-state spaces such as the N-Pancake or the sliding-tile puzzle. It supports both
-MAX and ADD pattern databases.
+state spaces. In particular, it assumes that either full or partial states are
+represented with a vector of integers which are all different. Eligible domains
+are the N-Pancake, the sliding-tile puzzle or the TopSpin.
+
+It supports both *MAX* and *ADD* pattern databases.
 
 # Dependencies
 

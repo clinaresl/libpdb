@@ -14,6 +14,7 @@
 #define _PDBDEFS_H_
 
 #include <cstdint>
+#include <vector>
 
 namespace pdb {
 
@@ -50,11 +51,9 @@ namespace pdb {
         // (here noted as successors)
         item.children (successors);
 
-        // items are stored in a pdb using a perfect ranking function (e.g.,
-        // Myrvold&Ruskey or lexicographical ordering, which is worst ...). items
-        // therefore must be able to compute their own ranking which must be given
-        // as a value of type pdboff_t ---defined above
-        { item.rank_pdb () } -> std::same_as<pdboff_t>;
+        // PDBs must rank permutations for accessing locations, and these must
+        // be returned by those types used for creating PDBs
+        { item.get_perm () } -> std::same_as<const std::vector<int>&>;
     };
 
 } // namespace pdb

@@ -166,13 +166,17 @@ namespace pdb {
             _omask = std::vector<int> (1 + *max_symb, -1);
 
             // Finally, compute the map from symbols to locations
+            int j = 0;
             for (auto i = 0 ; i < int (pattern.size ()) ; i++) {
                 if (pattern[i] == '-') {
 
                     // the pattern is defined wrt the goal definition. Note that
                     // preserved symbols are pushed to the back of the partial
-                    // permutation
-                    _omask[goal[i]] = int (pattern.size ()) - _nbsymbols + i;
+                    // permutation. j counts how many symbols have been already
+                    // pushed to the end and it is used to compute the location
+                    // of the next symbol in the permutations to rank.
+                    _omask[goal[i]] = int (pattern.size ()) - _nbsymbols + j;
+                    j++;
                 } else if (pattern[i] == '*') {
 
                     // then this symbol is ignored in the abstract state space
@@ -245,7 +249,6 @@ namespace pdb {
             }
 
             int n = _n;
-            int s, w;
 
             // initialize the rank of the permutation to 0 and also the series of
             // factors to use
@@ -255,21 +258,35 @@ namespace pdb {
             // create the (partial) permutation to rank, and compute also its
             // inverse. Because the pattern is given in a partial permutation, all
             // non-abstracted symbols are pushed to the end of the permutation
+            int nbsymbols = 0;
             std::vector<int> p (_n);
             std::vector<int> q (_n);
             for (auto i = 0 ; i < _n ; i++) {
 
-                // in case this content is not abstracted
-                if (perm[i] != pdb::NONPAT) {
+                // add this content to p in case this content is not abstracted.
+                // If an abstract state has been given this is noted because the
+                // i-th symbol is not NONPAT. In case a full permutation is
+                // given, this case is detected because _omask is -1
+                if (perm[i] != pdb::NONPAT & _omask[perm[i]] >= 0) {
 
                     // push it to the end of the partial permutation and store its
                     // location in the inverse permutation
                     p[_omask[perm[i]]] = i;
                     q[i] = _omask[perm[i]];
+
+                    // and increment the number of symbols being computed
+                    nbsymbols++;
                 }
             }
 
+            // ensure that the number of symbols produced and the number of
+            // symbols considered in the initialization of this PDB are the same
+            if (nbsymbols != _nbsymbols) {
+                throw std::runtime_error (" [rank] nbsymbols != _nbsymbols");
+            }
+
             // compute the rank
+            int s, w;
             while (n > _n - _nbsymbols) {
 
                 // take the last element from the permutation and swap n-1 and

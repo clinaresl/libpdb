@@ -30,9 +30,9 @@ TEST_F (PDBFixture, Empty) {
     }
 }
 
-// Check that the ranking of full permutations is correct
+// Check that the ranking of full permutations is correct with full patterns
 // ----------------------------------------------------------------------------
-TEST_F (PDBFixture, FullPermutations) {
+TEST_F (PDBFixture, FullPermutationsFullPattern) {
 
     // Test all the full permutations of the N-Pancake with 4<= N <= 10
     for (auto length = 4 ; length <= 10 ; length++) {
@@ -64,6 +64,69 @@ TEST_F (PDBFixture, FullPermutations) {
 
             // and now set it to true to check against the next values
             ranked[index] = 1;
+        }
+    }
+}
+
+// Check that the ranking of full permutations is correct with partial patterns
+// ----------------------------------------------------------------------------
+TEST_F (PDBFixture, FullPermutationsPartialPattern) {
+
+    // Test all the full permutations of the N-Pancake with 4<= N <= 8
+    for (auto length = 4 ; length <= 8 ; length++) {
+
+        // compute all the full permutations with this length
+        auto permutations = generatePermutations (length);
+
+        // test also all patterns with a number of symbols being preserved from
+        // 1 until length-1 (the case with length symbols being preserved is
+        // already tested with FullPermutationsFullPattern)
+        for (auto nbsymbols = 1; nbsymbols < length ; nbsymbols++) {
+
+            // compute all patterns with length symbols, nbsymbols of them being
+            // preserved
+            auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+
+            // test every pattern separately
+            for (auto ipattern : patterns) {
+
+                // create a PDB for processing n-Pancakes with n=length, and
+                // initialize it with the identity permutation and the i-th pattern
+                auto goal = succListInt (length);
+                pdb::pdboff_t space_size = pdb::pdb_t<npancake_t>::address_space (ipattern);
+                pdb::pdb_t<npancake_t> pdb (space_size);
+                pdb.init (goal, ipattern);
+
+                // now test every full permutation with this pattern. A map is
+                // used to register the first full permutation which has a
+                // specific value. Because patterns are used, it is expected for
+                // other permutations (when being abstracted) to have the same
+                // rank. The test consists then of verifying that both the new
+                // permutation and the recorded one represent the same abstract
+                // state
+                map<int, vector<int>> mapping;
+                for (const auto iperm :  permutations) {
+
+                    // create an instance with this permutation and compute its
+                    // ranking
+                    npancake_t instance (iperm);
+                    auto index = pdb.rank (instance.get_perm ());
+
+                    // check whether a permutation with the same rank index has
+                    // been generated before
+                    if ( auto it = mapping.find (index); it == mapping.end ()) {
+
+                        // if not, annotate this permutation in the map
+                        mapping [index] = iperm;
+                    } else {
+
+                        // otherwise, verify that both permutations, the one
+                        // recorded before, and this one represent the same
+                        // abstract state
+                        ASSERT_TRUE (equal_abstract (it->second, iperm, goal, ipattern));
+                    }
+                }
+            }
         }
     }
 }

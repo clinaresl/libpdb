@@ -70,6 +70,46 @@ protected:
 
         return instances;
     }
+
+    // return whether the two given (full) permutations are equal or not when
+    // being abstracted according to the given pattern defined over the
+    // specified goal state. Both permutations are assumed to have the same
+    // length and also the same symbols but posibly arranged in a different
+    // order. Also the pattern and goal have the same length than the
+    // permutations
+    bool equal_abstract (const std::vector<int> p1, const std::vector<int> p2,
+                         const std::vector<int> goal, const std::string pattern) {
+
+        // compute the inverse of each permutation
+        auto maxi = std::max_element (p1.begin (), p1.end ());
+        std::vector<int> q1 (1 + *maxi);
+        for (auto i = 0 ; i < p1.size () ; i++) {
+            q1[p1[i]] = i;
+        }
+        std::vector<int> q2 (1 + *maxi);
+        for (auto i = 0 ; i < p2.size () ; i++) {
+            q2[p2[i]] = i;
+        }
+
+        // now, verify whether both permutations are indeed equal or not
+        for (auto i = 0 ; i < pattern.size () ; i++) {
+
+            if (pattern[i]=='-') {
+
+                // in case the i-th symbol in the goal is being preserved
+                if (q1[goal[i]] != q2[goal[i]]) {
+
+                    // then verify they contain the i-th symbol in goal in the
+                    // same location
+                    return false;
+                }
+            }
+        }
+
+        // at this point, they both have been proved to be the same abstract
+        // state
+        return true;
+    }
 };
 
 #endif // _TSTPDBFIXTURE_H_

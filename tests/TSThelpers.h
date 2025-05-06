@@ -57,7 +57,11 @@ const npancake_t randInstance (int length);
 
 // return a vector of vectors of integers with all permutations of the symbols
 // in the range [1, N]
-std::vector<std::vector<int>> generatePermutations(int N);
+std::vector<std::vector<int>> generatePermutations(int n);
+
+// return a vector of vectors of strings with all patterns that contain n
+// symbols '-' and m symbols '*'
+std::vector<std::string> generatePatterns(int n, int m);
 
 #endif // _TSTHELPERS_H_
 

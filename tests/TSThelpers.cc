@@ -148,19 +148,62 @@ const npancake_t randInstance (int length) {
 
 // return a vector of vectors of integers with all permutations of the symbols
 // in the range [1, N]
-std::vector<std::vector<int>> generatePermutations(int N) {
-    std::vector<std::vector<int>> result;
-    std::vector<int> nums;
+std::vector<std::vector<int>> generatePermutations(int n) {
+    vector<vector<int>> result;
+    vector<int> nums;
 
-    // Initialize nums with [1, 2, ..., N]
-    for (int i = 1; i <= N; ++i) {
+    // Initialize nums with [1, 2, ..., n]
+    for (int i = 1; i <= n; ++i) {
         nums.push_back(i);
     }
 
     // Generate all permutations using std::next_permutation
     do {
         result.push_back(nums);
-    } while (std::next_permutation(nums.begin(), nums.end()));
+    } while (next_permutation(nums.begin(), nums.end()));
+
+    return result;
+}
+
+// return a vector of vectors of strings with all patterns that contain n
+// symbols '-' and m symbols '*'
+vector<string> generatePatterns(int n, int m) {
+    set<string> prev;
+    vector<string> anc, result;
+    string seed;
+
+    // Initialize a string with the letters from 'a' up to the character a+(n+m)
+    for (auto i = 0 ; i < n+m ; i++) {
+        seed.push_back (char ('a'+i));
+    }
+
+    // Generate all permutations using the symbols in the range ['a', 'a'+n+m]
+    do {
+        anc.push_back(seed);
+    } while (next_permutation(seed.begin(), seed.end()));
+
+    // and now process all permutations making the proper substitutions
+    for (const auto& iperm : anc) {
+
+        // substitute in this permutation every symbol in the range ['a', 'a'+n]
+        // with '-' and the rest with '*'
+        string next;
+        for (auto& ch: iperm) {
+            if (ch -'a' < n) {
+                next.push_back ('-');
+            } else {
+                next.push_back ('*');
+            }
+        }
+
+        // in case this string has not been produced add it then
+        if (prev.find (next) == prev.end ()) {
+            result.push_back (next);
+        }
+
+        // and add it to the set of strings being produced
+        prev.insert (next);
+    }
 
     return result;
 }

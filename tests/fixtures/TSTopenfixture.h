@@ -45,33 +45,35 @@ class OpenFixture : public ::testing::Test {
                 pancake[4];
         }
 
-        // return a vector with nbitems random instances of the 5-Pancake
-        std::vector<npancake_t> randItems (const int nbitems) {
+        // return a vector with nbitems nodes of random instances of the
+        // 5-Pancake
+        std::vector<pdb::node_t<npancake_t>> randItems (const int nbitems) {
 
-            std::vector<npancake_t> values;
+            std::vector<pdb::node_t<npancake_t>> values;
 
             // add the random instances
             for (auto j = 0 ; j < nbitems ; j++) {
-                values.push_back (randInstance (5));
+                values.push_back (pdb::node_t<npancake_t> (randInstance (5)));
             }
 
             return values;
         }
 
-        // Populate an open list with a random sequence of instances of the
-        // 5-Pancake in increasing order ---in this experiment, a total order is
-        // created by reading the contents of a N-Pancake as an integer value
-        std::vector<npancake_t> populate (pdb::open_t<npancake_t>& open,
-                                          const int nbitems) {
+        // Populate an open list with a random sequence of nodes of instances of
+        // the 5-Pancake in increasing order ---in this experiment, a total
+        // order is created by reading the contents of a N-Pancake as an integer
+        // value
+        std::vector<pdb::node_t<npancake_t>> populate (pdb::open_t<pdb::node_t<npancake_t>>& open,
+                                                       const int nbitems) {
 
-            // Create the random sequence
-            std::vector<npancake_t> values = randItems (nbitems);
+            // Create the random sequence of nodes of pancakes
+            auto values = randItems (nbitems);
 
             // insert all the 5-Pancakes in the open list sorting them in
             // increasing order of their index which is given by their contents
             // read as an int.
             for (auto v : values) {
-                open.insert (v, index (v));
+                open.insert (v, index (v.get_state ()));
             }
 
             // and return the vector of values inserted in the open list

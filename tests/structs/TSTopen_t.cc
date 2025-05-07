@@ -16,12 +16,12 @@ using namespace std;
 
 // Checks the creation of empty open lists is initialized correctly
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, EmptyNPancake) {
+TEST_F (OpenFixture, NPancakeEmpty) {
 
     for (auto i = 0 ; i < NB_TESTS ; i++) {
 
         // create an open list to store npancakes
-        pdb::open_t<npancake_t> bucket;
+        pdb::open_t<pdb::node_t<npancake_t>> bucket;
 
         // now, verify the bucket is properly initialized
         ASSERT_EQ (bucket.get_mini (), 1);
@@ -33,21 +33,21 @@ TEST_F (OpenFixture, EmptyNPancake) {
 
 // Checks the number of buckets grows as the indices become larger
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, SizeNPancake) {
+TEST_F (OpenFixture, NPancakeSize) {
 
     // resizing a bucket is a very costly operation and thus, this is done only
     // once
 
     // create a bucket to store strings
-    pdb::open_t<npancake_t> open;
+    pdb::open_t<pdb::node_t<npancake_t>> open;
 
     // now insert items at the positions which follow the serie of powers of
     // 2 until a very large number
     int idx = 1;
     while (idx <= MAX_NB_BUCKETS ) {
 
-        // insert a random instance of the 5-Pancake at this index
-        open.insert (randInstance (5), idx);
+        // insert a node with a random instance of the 5-Pancake at this index
+        open.insert (pdb::node_t (randInstance (5)), idx);
 
         // in this test, items are inserted in increasing order, thus, verify
         // that the maximum index progresses accordingly, whereas the minimum
@@ -63,16 +63,16 @@ TEST_F (OpenFixture, SizeNPancake) {
 
 // Checks that open lists can be effectively resized
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, ResizeNPancake) {
+TEST_F (OpenFixture, NPancakeResize) {
 
     for (auto i = 0 ; i < NB_TESTS ; i++) {
 
         // create an open list to store instances of the 5-Pancake
-        pdb::open_t<npancake_t> open;
+        pdb::open_t<pdb::node_t<npancake_t>> open;
 
-        // randomly determine the number of buckets which is necessarily larger
-        // than 0. Note the maximum length is roughly 1,000, the reason being
-        // that creating buckets which are larger is a very costly operation
+        // randomly determine the number of buckets. The maximum length is
+        // roughly 1,000, the reason being that creating buckets which are
+        // larger is a very costly operation
         auto length = 1 + random () % MAX_NB_BUCKETS/1'000;
 
         // and compute the minimum power of two which is greater or equal than
@@ -99,37 +99,37 @@ TEST_F (OpenFixture, ResizeNPancake) {
 // Checks that instances of the 5-Pancake are properly sorted in an open list in
 // increasing order
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, InsertNPancake) {
+TEST_F (OpenFixture, NPancakeInsert) {
 
     // function used for computing the minimum and maximum index
-    auto comp = [this] (const npancake_t& s1, const npancake_t& s2) {
-        return index (s1) < index (s2);
+    auto comp = [this] (const pdb::node_t<npancake_t>& s1, const pdb::node_t<npancake_t>& s2) {
+        return index (s1.get_state ()) < index (s2.get_state ());
     };
 
     for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
 
-        // create an open list for storing instances of the 5-Pancake
-        pdb::open_t<npancake_t> open;
+        // create an open list for storing nodes with instances of the 5-Pancake
+        pdb::open_t<pdb::node_t<npancake_t>> open;
 
         // populate the open list
-        vector<npancake_t> values = populate (open, MAX_VALUES);
+        vector<pdb::node_t<npancake_t>> values = populate (open, MAX_VALUES);
 
         // get the minimum and maximum length which should be proven to be equal
         // to the minimum and maximum indexes in the bucket
         auto mini = min_element (values.begin (), values.end (), comp);
         auto maxi = max_element (values.begin (), values.end (), comp);
-        ASSERT_EQ (index (*mini), open.get_mini ());
-        ASSERT_EQ (index (*maxi), open.get_maxi ());
+        ASSERT_EQ (index ((*mini).get_state ()), open.get_mini ());
+        ASSERT_EQ (index ((*maxi).get_state ()), open.get_maxi ());
 
-        // extract all items from the bucket and verify their index is given in
+        // extract all nodes from the bucket and verify their index is given in
         // increasing order
         int idx = 0;
         int current = 0;
         while (open.size ()) {
 
             // extract the first element from the bucket
-            npancake_t item = open.pop_front ();
-            ASSERT_GE (index (item), current);
+            pdb::node_t<npancake_t> item = open.pop_front ();
+            ASSERT_GE (index (item.get_state ()), current);
 
             // and verify the size has decreased accordingly
             idx++;
@@ -137,33 +137,33 @@ TEST_F (OpenFixture, InsertNPancake) {
 
             // and update the length of the last string retrieved from the
             // bucket
-            current = index (item);
+            current = index (item.get_state ());
         }
     }
 }
 
-// Checks that instances of the 5-Pancake are properly removed from an open list
+// Checks that nodes of 5-Pancake are properly removed from an open list
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, RemoveNPancake) {
+TEST_F (OpenFixture, NPancakeRemove) {
 
     // function used for computing the minimum and maximum index
-    auto comp = [this] (const npancake_t& s1, const npancake_t& s2) {
-        return index (s1) < index (s2);
+    auto comp = [this] (const pdb::node_t<npancake_t>& s1, const pdb::node_t<npancake_t>& s2) {
+        return index (s1.get_state ()) < index (s2.get_state ());
     };
 
     for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
 
         // create an open list to store npancakes
-        pdb::open_t<npancake_t> open;
+        pdb::open_t<pdb::node_t<npancake_t>> open;
 
         // populate the open list
-        vector<npancake_t> values = populate (open, MAX_VALUES);
+        vector<pdb::node_t<npancake_t>> values = populate (open, MAX_VALUES);
 
         // create a histogram with the observations of the indices of all
         // values. Indices range in the interval [12345, 54321]
         vector<int> histogram (55'000);
         for (auto v : values ) {
-            histogram[index (v)]++;
+            histogram[index (v.get_state ())]++;
         }
 
         // verify the histogram corresponds with the data stored in the bucket
@@ -176,17 +176,17 @@ TEST_F (OpenFixture, RemoveNPancake) {
         const auto length = values.size ();
         for (auto j = 0 ; j < length ; j++) {
             auto loc = random () % values.size ();
-            auto idx = index (values[loc]);
+            auto idx = index (values[loc].get_state ());
 
             // remove an item from the bucket with an index equal to the loc-th
             // item in values, and verify that the extracted element has
             // precisely that size
             auto item = open.remove (idx);
-            ASSERT_EQ (index (item), idx);
+            ASSERT_EQ (index (item.get_state ()), idx);
 
             // verify the histogram corresponds with the data stored in the bucket
             histogram[idx]--;
-            for (auto j = 0 ; j < MAX_NB_CHARS ; j++) {
+            for (auto j = 0 ; j < 55'000 ; j++) {
                 ASSERT_EQ (open.size (j), histogram[j]);
             }
 
@@ -205,9 +205,9 @@ TEST_F (OpenFixture, RemoveNPancake) {
             auto mini = min_element (values.begin (), values.end (), comp);
             auto maxi = max_element (values.begin (), values.end (), comp);
             ASSERT_TRUE (open.size () == 0 ||
-                         (index (*mini) == open.get_mini ()));
+                         (index ((*mini).get_state ()) == open.get_mini ()));
             ASSERT_TRUE (open.size () == 0 ||
-                         (index (*maxi) == open.get_maxi ()));
+                         (index ((*maxi).get_state ()) == open.get_maxi ()));
         }
 
         // before running into the next try, verify the total number of items is
@@ -216,29 +216,29 @@ TEST_F (OpenFixture, RemoveNPancake) {
     }
 }
 
-// Checks that mixed insertions and removals from an open list of instances of
-// the 5-Pancake work as expected
+// Checks that mixed insertions and removals from an open list of nodes with
+// instances of the 5-Pancake work as expected
 // ----------------------------------------------------------------------------
-TEST_F (OpenFixture, InsertRemoveNPancake) {
+TEST_F (OpenFixture, NPancakeInsertRemove) {
 
     // function used for computing the minimum and maximum index
-    auto comp = [this] (const npancake_t& s1, const npancake_t& s2) {
-        return index (s1) < index (s2);
+    auto comp = [this] (const pdb::node_t<npancake_t>& s1, const pdb::node_t<npancake_t>& s2) {
+        return index (s1.get_state ()) < index (s2.get_state ());
     };
 
     for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
 
         // create a bucket to store instances of the 5-Pancake
-        pdb::open_t<npancake_t> open;
+        pdb::open_t<pdb::node_t<npancake_t>> open;
 
         // populate the bucket and get the values inserted
-        vector<npancake_t> values = populate (open, MAX_VALUES);
+        vector<pdb::node_t<npancake_t>> values = populate (open, MAX_VALUES);
 
         // create a histogram with the observations of the indices of all
         // values. Indices range in the interval [12345, 54321]
         vector<int> histogram (55'000);
         for (auto v : values ) {
-            histogram[index (v)]++;
+            histogram[index (v.get_state ())]++;
         }
 
         // verify the histogram corresponds with the data stored in the bucket
@@ -247,7 +247,7 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
         }
 
         // now, create a vector of 5-Pancakes to insert into the open list
-        vector<npancake_t> data = randItems (MAX_VALUES);
+        vector<pdb::node_t<npancake_t>> data = randItems (MAX_VALUES);
 
         // and now, until the additional data is exhausted or the bucket is
         // exhausted
@@ -260,12 +260,12 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
 
                 // removing from the bucket a random element
                 auto loc = random () % values.size ();
-                auto idx = index (values[loc]);
+                auto idx = index (values[loc].get_state ());
 
                 // and remove it. Verify next that the item removed has the
                 // expected index
                 auto item = open.remove (idx);
-                ASSERT_EQ (index (item), idx);
+                ASSERT_EQ (index (item.get_state ()), idx);
 
                 // make sure to remove this item from the vector of values to
                 // avoid selecting it again
@@ -278,7 +278,7 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
 
                 // insert an item from the vector of additional data
                 auto loc = random () % data.size ();
-                open.insert (data[loc], index (data[loc]));
+                open.insert (data[loc], index (data[loc].get_state ()));
 
                 // ensure that values contains the same data stored in the bucket
                 values.push_back (data[loc]);
@@ -299,9 +299,9 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
             auto mini = min_element (values.begin (), values.end (), comp);
             auto maxi = max_element (values.begin (), values.end (), comp);
             ASSERT_TRUE (open.size () == 0 ||
-                         (index (*mini) == open.get_mini ()));
+                         (index ((*mini).get_state ()) == open.get_mini ()));
             ASSERT_TRUE (open.size () == 0 ||
-                         (index (*maxi) == open.get_maxi ()));
+                         (index ((*maxi).get_state ()) == open.get_maxi ()));
         }
 
         // extract all items from the bucket and verify their length is given in
@@ -311,8 +311,8 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
         while (open.size ()) {
 
             // extract the first element from the bucket
-            npancake_t item = open.pop_front ();
-            ASSERT_GE (index (item), current);
+            pdb::node_t<npancake_t> item = open.pop_front ();
+            ASSERT_GE (index (item.get_state ()), current);
 
             // and verify the size has decreased accordingly
             idx++;
@@ -320,7 +320,7 @@ TEST_F (OpenFixture, InsertRemoveNPancake) {
 
             // and update the length of the last string retrieved from the
             // bucket
-            current = index (item);
+            current = index (item.get_state ());
         }
     }
 }

@@ -26,11 +26,21 @@
 
 namespace pdb {
 
-    // Class definition
-    //
-    // The underlying type of PDBs are of any type satisfying the type
-    // constraint pdb_type. Some ops, however, require that items are given
-    // wrapped in a type node that, by default is node_t<T>
+    // // Forward declaration
+    // template<typename NodeT>
+    // class open_t;
+
+    // // Class definition
+    // //
+    // // The underlying type of PDBs are of any type satisfying the type
+    // // constraint pdb_type. Some ops, however, require that items are given
+    // // wrapped in a type node that, by default is node_t<T>
+
+    // // Class definition
+    // template<typename T>
+    // requires pdb_type<T>
+    // class pdb_t<node_t<T>> {
+
     template<pdb_type T, typename Node=node_t<T>>
     class pdb_t {
 

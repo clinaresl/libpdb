@@ -20,28 +20,38 @@
 #include<vector>
 
 #include "../PDBdefs.h"
+#include "PDBnode_t.h"
 
 namespace pdb {
 
+    // Forward declaration
+    template<typename NodeT>
+    class open_t;
+
     // Class definition
-    template<pdb_type T>
-    class open_t {
+    //
+    // Open lists contain nodes of any type provided that they satisfy the type
+    // constraint pdb_type, e.g., npancakes
+    template<typename T>
+    requires pdb_type<T>
+    class open_t<node_t<T>> {
 
     private:
 
-        // INVARIANT: an open list consists of a vector of vectors with a
-        // non-negative size. All operations preserve the range [mini,maxi] of
-        // values containing items unless size=0 in which case mini=maxi=1
-        std::vector<std::vector<T>> _queue;           // f-indexes to the buckets
-        size_t _size;                          // number of elements in the queue
-        int _mini;                                               // minimum index
-        int _maxi;                                               // maximum index
+        // INVARIANT: an open list consists of a vector of vectors of nodes of
+        // any underlying type satisfying the requirement pdb_type. All
+        // operations preserve the range [mini,maxi] of values containing items
+        // unless size=0 in which case mini=maxi=1
+        std::vector<std::vector<node_t<T>>> _queue; // f-indexes to the buckets
+        size_t _size;                        // number of elements in the queue
+        int _mini;                                             // minimum index
+        int _maxi;                                             // maximum index
 
     public:
 
         // Default constructor
         open_t ():
-            _queue  { std::vector<std::vector<T>> (1, std::vector<T>() ) },
+            _queue  { std::vector<std::vector<node_t<T>>> (1, std::vector<node_t<T>>() ) },
             _size   { 0 },                              // there is only one bucket!
             _mini   { 1 },        // INVARIANT: _mini and _maxi have to be above the
             _maxi   { 1 }           // current number of items if the queue is empty
@@ -50,7 +60,7 @@ namespace pdb {
         // Explicit constructor - it is also possible to create a bucket giving
         // the initial number of buckets
         explicit open_t (size_t capacity):
-            _queue  { std::vector<std::vector<T>> (capacity, std::vector<T>() ) },
+            _queue  { std::vector<std::vector<node_t<T>>> (capacity, std::vector<node_t<T>>() ) },
             _size   { 0 },
             _mini   { 1 },       // INVARIANT: _mini and _maxi have to be above the
             _maxi   { 1 }          // current number of items if the queue is empty
@@ -91,19 +101,19 @@ namespace pdb {
         //
         // It specifically verifies that the number of buckets is enough for
         // inserting the new item. If not, additional space is created
-        bool insert (const T& item, const int idx);
+        bool insert (const node_t<T>& item, const int idx);
 
         // remove returns and erases the first item with the specified index. If
         // the bucket is empty an exception is thrown. It also takes care of
         // preserving the consistency of other internal data
-        T remove (const int idx);
+        node_t<T> remove (const int idx);
 
         // pop_front extracts the first item with the minimum index
-        T pop_front ()
+        node_t<T> pop_front ()
             { return remove (_mini); }
 
         // returns the first element without popping it
-        T front () {
+        node_t<T> front () {
             return std::move(_queue[_mini].back ());
         }
 
@@ -115,8 +125,9 @@ namespace pdb {
 
     // set the number of buckets to the value specified. In case the number of
     // buckets requested is too large an exception is thrown
-    template<pdb_type T>
-    const size_t open_t<T>::set_nbbuckets (const size_t nbbuckets) {
+    template<typename T>
+    requires pdb_type<T>
+    const size_t open_t<node_t<T>>::set_nbbuckets (const size_t nbbuckets) {
 
         // if too many buckets were requested an exception is thrown
         if (nbbuckets >= _queue.max_size ()) {
@@ -142,8 +153,9 @@ namespace pdb {
     //
     // It specifically verifies that the number of buckets is enough for inserting
     // the new item. If not, additional space is created
-    template<pdb_type T>
-    bool open_t<T>::insert (const T& item, const int idx)
+    template<typename T>
+    requires pdb_type<T>
+    bool open_t<node_t<T>>::insert (const node_t<T>& item, const int idx)
     {
 
         // ensure this bucket can accomodate values in the i-th slot. 1 is added
@@ -165,8 +177,9 @@ namespace pdb {
     // remove returns and erases the first item with the specified index. If
     // the bucket is empty an exception is thrown. It also takes care of
     // preserving the consistency of other internal data
-    template<pdb_type T>
-    T open_t<T>::remove (const int idx)
+    template<typename T>
+    requires pdb_type<T>
+    node_t<T> open_t<node_t<T>>::remove (const int idx)
     {
 
         // in case the corresponding bucket is empty, throw an exception
@@ -175,7 +188,7 @@ namespace pdb {
         }
 
         // extract the first item from the idx bucket and erase it
-        T item = std::move(_queue[idx].back ());
+        node_t<T> item = std::move(_queue[idx].back ());
         _queue [idx].pop_back ();
 
         // internal data

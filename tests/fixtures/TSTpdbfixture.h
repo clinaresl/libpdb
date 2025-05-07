@@ -71,6 +71,42 @@ protected:
         return instances;
     }
 
+    // Generate a vector with n random different instances of nodes of the
+    // N-pancake with up to length discs, each with a different strictly
+    // positive g-value, all being masked with the given combination of goal and
+    // pattern
+    std::vector<pdb::node_t<npancake_t>> randMaskedNodes (const int n, const int length,
+                                                          const std::vector<int>& goal, const std::string pattern) {
+
+        std::set<npancake_t> prev;
+        std::vector<pdb::node_t<npancake_t>> instances;
+
+        // now, create as many random instances as requested of the given length
+        for (auto i = 0 ; i < n ; i++){
+
+            // create a random instance of a pancake of the given length
+            auto iperm = randInstance (length);
+
+            // and mask it with the gien combination of goal and pattern
+            auto mperm = mask (iperm.get_perm (), goal, pattern);
+
+            // and ensure it is unique
+            while (prev.find (mperm) != prev.end ()) {
+                iperm = randInstance (length);
+                mperm = mask (iperm.get_perm (), goal, pattern);
+            }
+
+            // remember it has been generated
+            prev.insert (mperm);
+
+            // and add it to the vector of instances to return
+            pdb::node_t<npancake_t> ipancake {mperm, uint8_t (1 + (rand ()%MAX_VALUES))};
+            instances.push_back (ipancake);
+        }
+
+        return instances;
+    }
+
     // return whether the two given (full) permutations are equal or not when
     // being abstracted according to the given pattern defined over the
     // specified goal state. Both permutations are assumed to have the same

@@ -14,7 +14,6 @@
 #define _PDBPDB_T_H_
 
 #include<algorithm>
-#include<iomanip>
 #include<iostream>
 #include<iterator>
 #include<memory>
@@ -43,7 +42,8 @@ namespace pdb {
         //
         //    1. Non-empty positions contain their g*-value
         //    2. Empty entries are represented with pdbzero
-        //    3. Empty positions are associated with the index string::npos
+        //    3. Non-existing positions are associated with the index
+        //       string::npos
         std::vector<pdbval_t> _address;
 
         // The container also counts the number of items stored and the length
@@ -56,7 +56,8 @@ namespace pdb {
         //
         //    1. Goal state (_goal): consists of a vector of integers with all
         //       symbols in the goal state (which is the one used, after being
-        //       masked, to generate the PDB)
+        //       masked, to generate the PDB). The goal has to be explicitly
+        //       given, i.e., it can never be abstracted
         //
         //    2. Pattern (_pattern): consists of a string of symbols '-' and
         //       '*', so that the i-th symbol in _goal is preserved in the

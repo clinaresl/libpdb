@@ -16,6 +16,7 @@ using namespace std;
 
 // Static vars
 int npancake_t::_n = 0;
+int npancake_t::_default_cost = 1;
 npancake_variant npancake_t::_variant = npancake_variant::unit;
 
 

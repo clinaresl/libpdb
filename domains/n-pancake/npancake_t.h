@@ -56,6 +56,18 @@ private:
     //
     static npancake_variant _variant;
 
+    // Consider an instance of the heavy-cost variant of the N-Pancake where the
+    // cost of a reversal is equal to the radius of the first disc below the
+    // spatula. If a reversal is practiced in an abstract state where such disc
+    // has been abstracted away it would not be possible to know the cost of the
+    // operator.
+    //
+    // In order to be able to generate meaningful information both in unit and
+    // arbitrary-cost domains, the default cost is defined as the cost of an
+    // operator involving an abstracted symbol, by default 1. It can be given in
+    // the init procedure
+    static int _default_cost;
+
     // methods
 
     // flip the first k positions of this permutation
@@ -93,6 +105,9 @@ public:
     // getters
     static int get_n () {
         return _n;
+    }
+    static int get_default_cost () {
+        return _default_cost;
     }
     const std::vector<int>& get_perm () const {
         return _perm;
@@ -140,24 +155,61 @@ public:
 
     // Invoke this service before using any other services of the npancake_t. It
     // sets the desired variant (unit by default) which is required to properly
-    // compute the descendants of any state
-    static void init (const npancake_variant variant = npancake_variant::unit) {
+    // compute the descendants of any state and, in case the heavy-variant has
+    // been selected, it is mandatory to provide the default cost
+    static void init (const npancake_variant variant = npancake_variant::unit,
+                      const int default_cost=1) {
 
         // copy the domain variant
         npancake_t::_variant = variant;
+
+        // and set the default cost to be used in the heavy-variant
+        _default_cost = default_cost;
     }
 
     // return the children of this state as a vector of tuples with two
-    // elements: first, the g-value of each node, and then the node itself
+    // elements: first, the g-value of each node, and then the node itself.
+    // Because this implementation honors both real and abstract states, the
+    // cost of an operator is defined as follows:
+    //
+    //    1. Unit variant: it is always equal to 1, either with real or abstract
+    //                     states
+    //    2. Heavy-cost variant:
+    //          a. Real states:    it is equal to the radius of the first disc
+    //                             immediately below the spatula, ie., the
+    //                             radius of the first disc not being transposed
+    //          b. Abstract state: if the first disc below the spatula has not
+    //                             been abstracted away, then it is its radius;
+    //                             otherwise, the default cost is used
     void children (std::vector<std::tuple<uint8_t, npancake_t>>& successors) {
 
         // for all locations
         for (auto i=1; i < _n; i++) {
 
+            // compute the cost of this operator
+            int g = 1;
+            if (_variant == npancake_variant::heavy_cost) {
+                if (i==_n-1) {
+
+                    // The table is never abstracted!
+                    g = 1+_n;
+                } else if (_perm[1+i]!=pdb::NONPAT) {
+
+                    // use the radius of the first disc immediately below the
+                    // spatula
+                    g = _perm[1+i];
+                } else {
+
+                    // the disc immediately below the spatula is unknown, use
+                    // the default cost
+                    g = _default_cost;
+                }
+            }
+
             // Add this successor to the vector of successors along with its
             // cost
             successors.push_back (std::tuple<uint8_t, npancake_t>{
-                    (_variant == npancake_variant::unit) ? 1 : ((i==_n-1) ? _n+1 : _perm[1+i]),
+                    g,
                     npancake_t (_flip (i))});
         }
     }

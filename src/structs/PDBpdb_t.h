@@ -14,6 +14,7 @@
 #define _PDBPDB_T_H_
 
 #include<algorithm>
+#include<iomanip>
 #include<iostream>
 #include<iterator>
 #include<memory>
@@ -256,8 +257,12 @@ namespace pdb {
             return index;
         }
 
-        // masking simply substitutes abstracted away symbols by NONPAT while
-        // preserving the rest.
+        // masking simply substitutes abstracted away symbols by NONPAT
+        // according to the pattern stored in this instance while preserving the
+        // rest. The following procedure masks both full and partial
+        // permutations, i.e., it accepts NONPAT in perm. In case any symbol in
+        // perm is NONPAT it is copied to the output as NONPAT as well in spite
+        // of the pattern
         //
         // It is not expected to use this function often. Instead, 'pdb_type's
         // should be able to handle abstract states and to generate its children
@@ -283,7 +288,11 @@ namespace pdb {
             // from this mask return the corresponding masked permutation
             std::vector<int> result;
             for (auto i = 0 ; i < int (perm.size ()) ; i++) {
-                result.push_back (smask[perm[i]]);
+                if (perm [i] == NONPAT) {
+                    result.push_back (NONPAT);
+                } else {
+                    result.push_back (smask[perm[i]]);
+                }
             }
 
             return result;

@@ -20,6 +20,7 @@
 
 #include "../TSTdefs.h"
 #include "../TSThelpers.h"
+#include "../../src/structs/PDBpdb_t.h"
 #include "../../domains/n-pancake/npancake_t.h"
 
 // Class definition
@@ -54,6 +55,33 @@ protected:
         // at this point, the second instance is known to be a descendant of the
         // first one where the first length+1 discs have been flipped
         return length + 1;
+    }
+
+    // generate n random patterns, each with length symbols
+    std::vector<std::string> randPatterns (int n, int length) {
+
+        std::vector<std::string> result;
+
+        while ( result.size () < n) {
+
+            // generate a random pattern
+            std::string patt;
+            while ( int (patt.size ()) < length) {
+
+                // randomly choose with the same probability whether to preserve
+                // or abstract the next symbol
+                if (rand ()%2) {
+                    patt.push_back ('-');
+                } else {
+                    patt.push_back ('*');
+                }
+            }
+
+            // and add this pattern to the collection to return
+            result.push_back (patt);
+        }
+
+        return result;
     }
 };
 

@@ -13,6 +13,8 @@
 #include<tuple>
 #include<vector>
 
+#include<iomanip>
+
 #include "../TSTdefs.h"
 #include "../fixtures/TSTnpancakefixture.h"
 
@@ -43,9 +45,10 @@ TEST_F (NPancakeFixture, DefaultInstance) {
     }
 }
 
-// Check that all successors are correctly generated in the unit variant
+// Check that all successors are correctly generated in the unit variant with
+// real states
 // ----------------------------------------------------------------------------
-TEST_F (NPancakeFixture, SuccessorsUnit) {
+TEST_F (NPancakeFixture, SuccessorsUnitReal) {
 
     // perform expansions under the unit variant
     npancake_t::init (npancake_variant::unit);
@@ -86,8 +89,9 @@ TEST_F (NPancakeFixture, SuccessorsUnit) {
 }
 
 // Check that all successors are correctly generated in the heavy-cost variant
+// with real states
 // ----------------------------------------------------------------------------
-TEST_F (NPancakeFixture, SuccessorsHeavyCost) {
+TEST_F (NPancakeFixture, SuccessorsHeavyCostReal) {
 
     // perform expansions under the heavy-cost variant
     npancake_t::init (npancake_variant::heavy_cost);
@@ -139,6 +143,73 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCost) {
         }
     }
 }
+
+// Check that all successors are correctly generated in the unit variant with
+// abstract states
+// ----------------------------------------------------------------------------
+TEST_F (NPancakeFixture, SuccessorsUnitAbstract) {
+
+    // perform expansions under the unit variant
+    npancake_t::init (npancake_variant::unit);
+
+    for (auto i = 0 ; i < NB_TESTS ; i++ ) {
+
+        // randomly choose the size of the next pancake and always use the
+        // identity permutation as the goal in the forthcoming tests. To avoid
+        // creating very large abstract state spaces, the size of the pancakes
+        // is restricted to [4, 10] and the number of symbols being preserved is
+        // aproximately half the length of the pancake
+        auto length = 4 + rand () % (7);
+        auto goal = succListInt (length);
+
+        // randomly try up to 10 different patterns
+        auto patterns = randPatterns (10, length);
+        for (auto ipattern : patterns) {
+
+            // create an abstract state. For using the masking services provided
+            // by the PDBs it is necessary to initialize it
+            auto address_space = pdb::pdb_t<npancake_t>::address_space (ipattern);
+            pdb::pdb_t<npancake_t> pdb (address_space);
+            pdb.init (goal, ipattern);
+
+            // and create an abstract state of the n-pancake
+            npancake_t state = randInstance (length);
+            npancake_t instance {pdb.mask (state.get_perm ())};
+
+            // now, expand this node and generate all children
+            vector<tuple<uint8_t, npancake_t>> successors;
+            instance.children (successors);
+
+            // first, verify the number of descendants equals its length minus one
+            ASSERT_EQ (successors.size (), npancake_t::get_n ()-1);
+            ASSERT_EQ (successors.size (), length-1);
+
+            // verify that all children have been correctly generated, ie., they
+            // are correct abstract states and the operator cost is always equal
+            // to 1
+            for (auto op = 1 ; i < length ; i++) {
+
+                // get the op-th child and its cost
+                auto [g, child] = successors[op-1];
+
+                // verify that all symbols in the range [0, op] are reversed
+                for (auto rev = 0 ; rev <= op/2; rev++) {
+                    ASSERT_EQ (instance[rev], child[op-rev]);
+                }
+
+                // and that all symbols in the range [op+1, length) are equal
+                for (auto idx = op+1; idx < length ; idx++) {
+                  ASSERT_EQ (instance[idx], child[idx]);
+                }
+
+                // verify also the cost is always equal to one
+                ASSERT_EQ (g, 1);
+            }
+        }
+    }
+}
+
+
 
 // Local Variables:
 // mode:cpp

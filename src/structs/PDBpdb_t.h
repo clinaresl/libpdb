@@ -126,12 +126,33 @@ namespace pdb {
         }
 
         // It is mandatory to init a pdb before doing any other operation with
-        // it. PDBs are initialized with the symbols in a goal and a pattern
-        // which specifies which ones are preserved, and which ones are
-        // abstracted away. It initializes the length of the permutations to
-        // consider, the number of symbols used in the abstract state space and
-        // also the mapping between symbols and their location in the partial
-        // permutation used to rank abstract states
+        // it ---in particular, ranking operations. PDBs are initialized with
+        // the symbols in a goal and a pattern which specifies which ones are
+        // preserved, and which ones are abstracted away.
+        //
+        // It initializes:
+        //
+        //    1. _n: the length of the permutations to consider,
+        //    2. _nbsymbols: the number of symbols used in the abstract state
+        //                   space, and also
+        //    3. _omask: the mapping between symbols and their location in the
+        //               partial permutation used to rank abstract states
+        //
+        // It also makes a copy of its arguments:
+        //
+        //    1. _goal: keeps a copy of a explicit representation of the goal
+        //              state, i.e., the goal state must not be given as an
+        //              abstract state
+        //    2. _pattern: keeps a copy of the given pattern which is used for
+        //                 masking permutations
+        //
+        //  Mind the difference between "masking" permutations and omasking
+        //  perms. The former refers to a simple substitution which preserves
+        //  those symbols not being abstracted away and writes NONPAT for those
+        //  which are not preserved; the latter however, refers to the creation
+        //  of a (full/partial) permutation which represents the contents of a
+        //  state in a way that can be ranked. "Masking" is implemented in
+        //  pdb_t::mask, whereas "omasking" is used in pdb_t::rank
         void init (const std::vector<int> goal, const std::string_view pattern) {
 
             // first, verify that both the goal and the pattern contain the same
@@ -140,8 +161,11 @@ namespace pdb {
                 throw std::invalid_argument (" [init] The goal and the pattern have different size!");
             }
 
-            // initialize the length of the permutations to consider
+            // initialize the length of the permutations to consider, and also
+            // make a copy of the goal and the pattern
             _n = goal.size ();
+            _goal = goal;
+            _pattern = pattern;
 
             // compute the number of non-abstracted symbols
             _nbsymbols = 0;
@@ -232,6 +256,39 @@ namespace pdb {
             return index;
         }
 
+        // masking simply substitutes abstracted away symbols by NONPAT while
+        // preserving the rest.
+        //
+        // It is not expected to use this function often. Instead, 'pdb_type's
+        // should be able to handle abstract states and to generate its children
+        // automatically so that this operation should be done only once for
+        // seeding the open list of the PDB generator
+        std::vector<int> mask (const std::vector<int>& perm) {
+
+            // sort the pattern according to its symbols
+            auto max_symb = std::max_element (_goal.begin (), _goal.end ());
+            auto smask = std::vector<int> (1 + *max_symb, int (pdbzero));
+
+            for (auto i = 0 ; i < int (_goal.size ()) ; i++) {
+
+                // in case this position is abstracted away, substitute it by
+                // NONPAT and preserve it otherwise
+                if (_pattern[i] == '*') {
+                    smask[_goal[i]] = int (NONPAT);
+                } else {
+                    smask[_goal[i]] = _goal[i];
+                }
+            }
+
+            // from this mask return the corresponding masked permutation
+            std::vector<int> result;
+            for (auto i = 0 ; i < int (perm.size ()) ; i++) {
+                result.push_back (smask[perm[i]]);
+            }
+
+            return result;
+        }
+
         // use the iterative implementation of Myrvold&Ruskey ranking function
         // to compute the ranking of the given permutation, which can be either
         // a full or partial permutation i.e., either representing a state in
@@ -240,7 +297,7 @@ namespace pdb {
         // with the constant NONPAT
         //
         // The value returned is used to index instances of T in the PDB
-        pdboff_t rank (const std::vector<int> perm) const {
+        pdboff_t rank (const std::vector<int>& perm) const {
 
             // first of all, verify the given permutation has the same size used
             // to initialize this pdb
@@ -263,10 +320,13 @@ namespace pdb {
             std::vector<int> q (_n);
             for (auto i = 0 ; i < _n ; i++) {
 
-                // add this content to p in case this content is not abstracted.
-                // If an abstract state has been given this is noted because the
-                // i-th symbol is not NONPAT. In case a full permutation is
-                // given, this case is detected because _omask is -1
+                // add this content to p only if it is not abstracted. If an
+                // abstract state has been given this is noted because the i-th
+                // symbol might be NONPAT. In case a full permutation is given,
+                // this case is detected because _omask is -1.
+                //
+                // WARNING - delivering a permutation perm which is not
+                // compatible with _omask would produced undefined behaviour
                 if (perm[i] != pdb::NONPAT & _omask[perm[i]] >= 0) {
 
                     // push it to the end of the partial permutation and store its

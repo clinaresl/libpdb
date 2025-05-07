@@ -23,7 +23,7 @@ TEST_F (PDBFixture, Empty) {
         // create an empty PDB (of pancakes) and verify its size and capacity
         // are correct. PDBs, when being created have to know the number of
         // items to host. An arbitrary value is given here.
-        pdb::pdb_t<npancake_t> pdb (MAX_VALUES);
+        pdb::pdb_t<pdb::node_t<npancake_t>> pdb (MAX_VALUES);
 
         ASSERT_EQ (pdb.capacity (), MAX_VALUES);
         ASSERT_EQ (pdb.size (), 0);
@@ -54,13 +54,12 @@ TEST_F (PDBFixture, Masking) {
                 // create a PDB for processing n-Pancakes with n=length, and
                 // initialize it with the identity permutation and the i-th pattern
                 auto goal = succListInt (length);
-                pdb::pdboff_t space_size = pdb::pdb_t<npancake_t>::address_space (ipattern);
-                pdb::pdb_t<npancake_t> pdb (space_size);
+                pdb::pdboff_t space_size = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+                pdb::pdb_t<pdb::node_t<npancake_t>> pdb (space_size);
                 pdb.init (goal, ipattern);
 
                 // now, verify that the masking operation is correct
                 for (const auto iperm :  permutations) {
-
                     ASSERT_EQ (mask (iperm, goal, ipattern),
                                pdb.mask (iperm));
                 }
@@ -81,12 +80,12 @@ TEST_F (PDBFixture, FullPermutationsFullPattern) {
         // Verify first that the size of the address space equals the number of
         // permutations generated, using a pattern which preserves all symbols
         string pattern = string (length, '-');
-        pdb::pdboff_t space_size = pdb::pdb_t<npancake_t>::address_space (pattern);
+        pdb::pdboff_t space_size = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (pattern);
         ASSERT_EQ (permutations.size (), space_size);
 
         // create a PDB for processing n-Pancakes with n=length, and initialize
         // it with the identity permutation
-        pdb::pdb_t<npancake_t> pdb (space_size);
+        pdb::pdb_t<pdb::node_t<npancake_t>> pdb (space_size);
         pdb.init (succListInt (length), pattern);
 
         // create an instance of the 10-Pancake with each permutation and verify
@@ -132,8 +131,8 @@ TEST_F (PDBFixture, FullPermutationsPartialPattern) {
                 // create a PDB for processing n-Pancakes with n=length, and
                 // initialize it with the identity permutation and the i-th pattern
                 auto goal = succListInt (length);
-                pdb::pdboff_t space_size = pdb::pdb_t<npancake_t>::address_space (ipattern);
-                pdb::pdb_t<npancake_t> pdb (space_size);
+                pdb::pdboff_t space_size = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+                pdb::pdb_t<pdb::node_t<npancake_t>> pdb (space_size);
                 pdb.init (goal, ipattern);
 
                 // now test every full permutation with this pattern. A map is
@@ -195,8 +194,8 @@ TEST_F (PDBFixture, PartialPermutations) {
                 // create a PDB for processing n-Pancakes with n=length, and
                 // initialize it with the identity permutation and the i-th pattern
                 auto goal = succListInt (length);
-                pdb::pdboff_t space_size = pdb::pdb_t<npancake_t>::address_space (ipattern);
-                pdb::pdb_t<npancake_t> pdb (space_size);
+                pdb::pdboff_t space_size = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+                pdb::pdb_t<pdb::node_t<npancake_t>> pdb (space_size);
                 pdb.init (goal, ipattern);
 
                 // now test every full permutation with this pattern. A map is
@@ -243,13 +242,12 @@ TEST_F (PDBFixture, NPancakeInsert) {
         // nbpancakes of length NB_DISCS/2
         int length = NB_DISCS/2;
         auto pattern = string (length, '-');
-        int capacity = pdb::pdb_t<npancake_t>::address_space (pattern);
+        int capacity = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (pattern);
         int nbpancakes = 1 + (rand ()%MAX_VALUES);
-        pdb::pdb_t<npancake_t> pdb (capacity);
+        pdb::pdb_t<pdb::node_t<npancake_t>> pdb (capacity);
 
-        // and initialize it to accept permutations of length NB_DISCS/2
-        auto goal = succListInt (length);
-        pdb.init (goal, pattern);
+        // and initialize it
+        pdb.init (succListInt (length), pattern);
 
         // create a random number of different nodes of npancakes. Since PDBs
         // do not store duplicates make sure that all nodes are unique
@@ -278,13 +276,12 @@ TEST_F (PDBFixture, NPancakeLookUpFullPermutation) {
         // nbpancakes of length NB_DISCS/2
         int length = NB_DISCS/2;
         auto pattern = string (length, '-');
-        int capacity = pdb::pdb_t<npancake_t>::address_space (pattern);
+        int capacity = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (pattern);
         int nbpancakes = 2 * (1 + (rand ()%MAX_VALUES));
-        pdb::pdb_t<npancake_t> pdb (capacity);
+        pdb::pdb_t<pdb::node_t<npancake_t>> pdb (capacity);
 
         // and initialize it to accept permutations of length NB_DISCS/2
-        auto goal = succListInt (length);
-        pdb.init (goal, pattern);
+        pdb.init (succListInt (length), pattern);
 
         // create a random number of diffferent nodes of npancakes
         vector<pdb::node_t<npancake_t>> values = randNodes (nbpancakes, length);

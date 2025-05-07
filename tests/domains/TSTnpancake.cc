@@ -166,8 +166,8 @@ TEST_F (NPancakeFixture, SuccessorsUnitAbstract) {
 
             // create an abstract state. For using the masking services provided
             // by the PDBs it is necessary to initialize it
-            auto address_space = pdb::pdb_t<npancake_t>::address_space (ipattern);
-            pdb::pdb_t<npancake_t> pdb (address_space);
+            auto address_space = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+            pdb::pdb_t<pdb::node_t<npancake_t>> pdb (address_space);
             pdb.init (goal, ipattern);
 
             // and create an abstract state of the n-pancake
@@ -233,8 +233,8 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCostAbstract) {
 
             // create an abstract state. For using the masking services provided
             // by the PDBs it is necessary to initialize it
-            auto address_space = pdb::pdb_t<npancake_t>::address_space (ipattern);
-            pdb::pdb_t<npancake_t> pdb (address_space);
+            auto address_space = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+            pdb::pdb_t<pdb::node_t<npancake_t>> pdb (address_space);
             pdb.init (goal, ipattern);
 
             // and create an abstract state of the n-pancake

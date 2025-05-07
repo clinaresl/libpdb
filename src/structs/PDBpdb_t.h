@@ -26,23 +26,17 @@
 
 namespace pdb {
 
-    // // Forward declaration
-    // template<typename NodeT>
-    // class open_t;
+    // Forward declaration
+    template<typename PDBNodeT>
+    class pdb_t;
 
-    // // Class definition
-    // //
-    // // The underlying type of PDBs are of any type satisfying the type
-    // // constraint pdb_type. Some ops, however, require that items are given
-    // // wrapped in a type node that, by default is node_t<T>
-
-    // // Class definition
-    // template<typename T>
-    // requires pdb_type<T>
-    // class pdb_t<node_t<T>> {
-
-    template<pdb_type T, typename Node=node_t<T>>
-    class pdb_t {
+    // Class definition
+    //
+    // PDBs use nodes of any type provided that they satisfy the type constraint
+    // pdb_type, e.g., npancakes
+    template<typename T>
+    requires pdb_type<T>
+    class pdb_t<node_t<T>> {
 
     private:
 
@@ -223,18 +217,18 @@ namespace pdb {
             }
         }
 
-        // insert an item given within a Node into the PDB and return a stable
+        // insert an item given within a node into the PDB and return a stable
         // index to it. Inserting an item means just writing down its g*-value
-        pdboff_t insert (const Node& item) {
+        pdboff_t insert (const node_t<T>& item) {
 
             // Compute the position where this item should be stored. Note that
             // the state underlying the definition of the node must provide
             // "get_perm" which returns a vector of integers used to rank the
-            // permutation
+            // permutation as required by the type constraint pdb_type
             pdboff_t index = rank (item.get_state ().get_perm ());
 
             // Insert this item at the right location (just simply by storing
-            // its g-value, which is a service provided by the Node) and
+            // its g-value, which is a service provided by node_t) and
             // increment the count of the number of alive items in the PDB
             _address[index] = item.get_g ();
             _size++;
@@ -253,7 +247,7 @@ namespace pdb {
 
         // return a stable index to the item given (as a node_t) in case it is
         // found in the PDB. Otherwise, return string::npos
-        pdboff_t find (const Node& item) const {
+        pdboff_t find (const node_t<T>& item) const {
 
             // get the location where the item should be found
             pdboff_t index = rank (item.get_state ().get_perm ());

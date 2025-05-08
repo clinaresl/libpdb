@@ -71,36 +71,35 @@ protected:
         return instances;
     }
 
-    // Generate a vector with n random different instances of nodes of the
-    // N-pancake with up to length discs, each with a different strictly
-    // positive g-value, all being masked with the given combination of goal and
-    // pattern
-    std::vector<pdb::node_t<npancake_t>> randMaskedNodes (const int n, const int length,
+    // Generate a vector with all different instances of nodes of the N-pancake
+    // with up to length discs, each with a different strictly positive g-value,
+    // being masked with the given combination of goal and pattern
+    std::vector<pdb::node_t<npancake_t>> randMaskedNodes (const int length,
                                                           const std::vector<int>& goal, const std::string pattern) {
 
         std::set<npancake_t> prev;
         std::vector<pdb::node_t<npancake_t>> instances;
 
-        // now, create as many random instances as requested of the given length
-        for (auto i = 0 ; i < n ; i++){
+        // first, create all permutations of the given length
+        std::vector<std::vector<int>> perms = generatePermutations (length);
 
-            // create a random instance of a pancake of the given length
-            auto iperm = randInstance (length);
+        // and process them all
+        for (const auto& iperm: perms) {
 
-            // and mask it with the gien combination of goal and pattern
-            auto mperm = mask (iperm.get_perm (), goal, pattern);
+            // mask this permutation with the given combination of goal and
+            // pattern
+            npancake_t instance (mask (iperm, goal, pattern));
 
-            // and ensure it is unique
-            while (prev.find (mperm) != prev.end ()) {
-                iperm = randInstance (length);
-                mperm = mask (iperm.get_perm (), goal, pattern);
+            // if it already exists, then skip it
+            if (prev.find (instance) != prev.end ()) {
+                continue;
             }
 
-            // remember it has been generated
-            prev.insert (mperm);
+            // remember this partial permutation has been generated
+            prev.insert (instance);
 
             // and add it to the vector of instances to return
-            pdb::node_t<npancake_t> ipancake {mperm, uint8_t (1 + (rand ()%MAX_VALUES))};
+            pdb::node_t<npancake_t> ipancake {instance, uint8_t (1 + (rand ()%MAX_VALUES))};
             instances.push_back (ipancake);
         }
 

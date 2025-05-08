@@ -328,83 +328,83 @@ TEST_F (PDBFixture, NPancakeLookUpFullPermutation) {
     }
 }
 
-// // checks that lookups of partial permutations work correctly in PDBs of of
-// // n-pancakes
-// // ----------------------------------------------------------------------------
-// TEST_F (PDBFixture, NPancakeLookUpPartialPermutation) {
+// checks that lookups of partial permutations work correctly in PDBs of of
+// n-pancakes
+// ----------------------------------------------------------------------------
+TEST_F (PDBFixture, NPancakeLookUpPartialPermutation) {
 
-//     // Use pancakes of length NB_DISCS/2
-//     int length = NB_DISCS/2;
+    // Use pancakes of length 8
+    int length = 8;
 
-//     for (auto i = 0 ; i < NB_TESTS/10 ; i++) {
+    // test all possible patterns with at least 1 symbol and up to 7 symbols
+    // being preserved. The case of 0 symbols is plainly impossible, i.e., it
+    // would not be even possible to rank any such partial permutation, and the
+    // case with 8 symbols has been tested in NPancakeLookUpFullPermutation
+    for (auto nbsymbols = 1; nbsymbols <= 7 ; nbsymbols++) {
 
-//         // test all possible patterns
-//         for (auto nbsymbols = 3; nbsymbols <= length ; nbsymbols++) {
+        // compute all patterns with length symbols, nbsymbols of them being
+        // preserved
+        auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
 
-//             // compute all patterns with length symbols, nbsymbols of them being
-//             // preserved
-//             auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+        // test every pattern separately
+        for (auto ipattern : patterns) {
 
-//             // test every pattern separately
-//             for (auto ipattern : patterns) {
+            // create an empty PDB (of n-pancakes) with capacity enough for
+            // storing permutations of length NB_DISCS/2 according to this
+            // pattern
+            int capacity = pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern);
+            pdb::pdb_t<pdb::node_t<npancake_t>> pdb (capacity);
 
-//                 // create an empty PDB (of n-pancakes) with capacity enough for
-//                 // storing nbpancakes of length NB_DISCS/2
-//                 int capacity = pdb::pdb_t<npancake_t>::address_space (ipattern);
-//                 pdb::pdb_t<npancake_t> pdb (capacity);
+            // and initialize it
+            auto goal = succListInt (length);
+            pdb.init (goal, ipattern);
 
-//                 // and initialize it
-//                 auto goal = succListInt (length);
-//                 pdb.init (goal, ipattern);
+            // get all the different partial permutations that result from
+            // the combination of the identity permutation and this pattern
+            vector<pdb::node_t<npancake_t>> values = randMaskedNodes (length, goal, ipattern);
 
-//                 // create a random number of diffferent nodes of npancakes
-//                 // int nbpancakes = 2 * (1 + (rand ()%MAX_VALUES));
-//                 int nbpancakes = 10;
-//                 vector<pdb::node_t<npancake_t>> values = randMaskedNodes (nbpancakes, length, goal, ipattern);
+            // Insert only half of the nodes in the PDB
+            auto idx = 0;
+            for (auto item : values) {
+                pdb.insert (item);
 
-//                 // Insert only half of the nodes in the PDB
-//                 auto idx = 0;
-//                 for (auto item : values) {
-//                     pdb.insert (item);
+                // and verify the size is correct
+                idx++;
+                ASSERT_EQ (pdb.size (), idx);
 
-//                     // and verify the size is correct
-//                     idx++;
-//                     ASSERT_EQ (pdb.size (), idx);
+                // in case that half of the nodes have been already processed, exit
+                if (idx >= values.size ()/2) {
+                    break;
+                }
+            }
 
-//                     // in case that half of the nodes have been already processed, exit
-//                     if (idx >= values.size ()/2) {
-//                         break;
-//                     }
-//                 }
+            // Now, ensure that all those nodes that have been inserted are actually
+            // found. Likewise, that those not being inserted are not found
+            idx = 0;
+            for (auto item : values) {
 
-//                 // Now, ensure that all those nodes that have been inserted are actually
-//                 // found. Likewise, that those not being inserted are not found
-//                 idx = 0;
-//                 for (auto item : values) {
+                // lookup for this value in the PDB
+                auto lookup = pdb.find (item);
 
-//                     // lookup for this value in the PDB
-//                     auto lookup = pdb.find (item);
+                // inserted values
+                if (idx < values.size ()/2) {
 
-//                     // inserted values
-//                     if (idx < values.size ()/2) {
+                    // verify the information returned is correct
+                    ASSERT_TRUE (lookup != string::npos);
+                    ASSERT_EQ (pdb[lookup], item.get_g ());
+                } else {
 
-//                         // verify the information returned is correct
-//                         ASSERT_TRUE (lookup != string::npos);
-//                         ASSERT_EQ (pdb[lookup], item.get_g ());
-//                     } else {
+                    // unexisting values. Note that when an entry does not exist
+                    // there is no need to check the value of the iterator
+                    ASSERT_TRUE (lookup == string::npos);
+                }
 
-//                         // unexisting values. Note that when an entry does not exist
-//                         // there is no need to check the value of the iterator
-//                         ASSERT_TRUE (lookup == string::npos);
-//                     }
-
-//                     // and increment the number of nodes processed so far
-//                     idx++;
-//                 }
-//             }
-//         }
-//     }
-// }
+                // and increment the number of nodes processed so far
+                idx++;
+            }
+        }
+    }
+}
 
 
 // Local Variables:

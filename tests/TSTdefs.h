@@ -24,8 +24,9 @@ constexpr int MAX_VALUE = std::numeric_limits<int>::max ();
 // predefined number of values
 constexpr int MAX_VALUES = 100;
 
-// maximum number of buckets
-constexpr int MAX_NB_BUCKETS = 1'000'000;
+// maximum number of buckets. Because pdbs index the buckets with pdbval_t,
+// which is usually an unsigned byte, the max is 255
+constexpr int MAX_NB_BUCKETS = 255;
 
 // minimum and maximum number of characters in strings randomly generated
 constexpr int MIN_NB_CHARS = 40;

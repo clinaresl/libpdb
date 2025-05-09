@@ -7,7 +7,7 @@
 //
 
 //
-// Unit tests for testing pdbs
+// Unit tests for testing the data structure of pdbs
 //
 
 #include "../fixtures/TSTpdbfixture.h"

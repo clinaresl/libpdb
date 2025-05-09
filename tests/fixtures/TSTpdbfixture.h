@@ -7,7 +7,7 @@
 //
 
 //
-// Fixture used to test PDBs
+// Fixture used to test the data structure of PDBs
 //
 
 #ifndef _TSTPDBFIXTURE_H_
@@ -18,6 +18,7 @@
 #include<cstdlib>
 #include<ctime>
 #include<random>
+#include<tuple>
 #include<vector>
 
 #include "gtest/gtest.h"

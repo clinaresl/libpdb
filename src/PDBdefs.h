@@ -18,19 +18,6 @@
 
 namespace pdb {
 
-    // Constants
-    //
-    // Types of PDBs
-    enum class pdb_mode {max, add};
-
-    // An entry equal to zero in the pattern database means unused entry. Because of
-    // this, the g*-values of all entries in the PDB are incremented intentionally
-    // in one unit and decreased only at the time they are written down to the file.
-    constexpr uint8_t pdbzero = 0;
-
-    // An abstracted symbol is shown with NONPAT
-    constexpr uint8_t NONPAT = 0xff;
-
     // Type definitions
     //
     // indices to the pattern database are as long as size_t
@@ -55,6 +42,19 @@ namespace pdb {
         // be returned by those types used for creating PDBs
         { item.get_perm () } -> std::same_as<const std::vector<int>&>;
     };
+
+    // Constants
+    //
+    // Types of PDBs
+    enum class pdb_mode {max, add};
+
+    // An entry equal to zero in the pattern database means unused entry. Because of
+    // this, the g*-values of all entries in the PDB are incremented intentionally
+    // in one unit and decreased only at the time they are written down to the file.
+    constexpr pdbval_t pdbzero = 0;
+
+    // An abstracted symbol is shown with NONPAT
+    constexpr uint8_t NONPAT = 0xff;
 
 } // namespace pdb
 

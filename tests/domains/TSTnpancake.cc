@@ -10,9 +10,6 @@
 // Unit tests of the N-Pancake
 //
 
-#include<tuple>
-#include<vector>
-
 #include "../TSTdefs.h"
 #include "../fixtures/TSTnpancakefixture.h"
 

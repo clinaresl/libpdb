@@ -94,14 +94,15 @@ namespace pdb {
 
         // methods
 
-        // add the given item to the bucket with the specified index. It returns
-        // true if the operation was successful and false otherwise. It also takes
-        // care of preserving the consistency of other internal data. It raises an
-        // exception in case the index exceeds the maximum capacity of the buckets
+        // add the given item to the bucket corresponding to its g-value. It
+        // returns true if the operation was successful and false otherwise. It
+        // also takes care of preserving the consistency of other internal data.
+        // It raises an exception in case the index exceeds the maximum capacity
+        // of the buckets
         //
         // It specifically verifies that the number of buckets is enough for
         // inserting the new item. If not, additional space is created
-        bool insert (const node_t<T>& item, const int idx);
+        bool insert (const node_t<T>& item);
 
         // remove returns and erases the first item with the specified index. If
         // the bucket is empty an exception is thrown. It also takes care of
@@ -116,12 +117,7 @@ namespace pdb {
         node_t<T> front () {
             return std::move(_queue[_mini].back ());
         }
-
-        bool empty() {
-            return _size == 0;
-        }
-
-    }; // class open_t<T>
+    }; // class open_t<node_t<T>>
 
     // set the number of buckets to the value specified. In case the number of
     // buckets requested is too large an exception is thrown
@@ -146,17 +142,20 @@ namespace pdb {
         return _queue.size ();
     }
 
-    // add the given item to the bucket with the specified index. It returns true
-    // if the operation was successful and false otherwise. It also takes care of
-    // preserving the consistency of other internal data. It raises an exception
-    // in case the index exceeds the maximum capacity of the buckets
+    // add the given item to the bucket corresponding to its g-value. It returns
+    // true if the operation was successful and false otherwise. It also takes
+    // care of preserving the consistency of other internal data. It raises an
+    // exception in case the index exceeds the maximum capacity of the buckets
     //
-    // It specifically verifies that the number of buckets is enough for inserting
-    // the new item. If not, additional space is created
+    // It specifically verifies that the number of buckets is enough for
+    // inserting the new item. If not, additional space is created
     template<typename T>
     requires pdb_type<T>
-    bool open_t<node_t<T>>::insert (const node_t<T>& item, const int idx)
+    bool open_t<node_t<T>>::insert (const node_t<T>& item)
     {
+
+        // this node should be stored in the bucket corresponding to its g-value
+        int idx = item.get_g ();
 
         // ensure this bucket can accomodate values in the i-th slot. 1 is added
         // because the first index is 0.

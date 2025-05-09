@@ -19,6 +19,7 @@ add_executable(gtest
   # ../domains/n-puzzle/npuzzle_t.cc
   # domains/TSTnpuzzle.cc
   structs/TSTpdb_t.cc
+  algorithm/TSTpdb.cc
 )
 
 target_link_libraries(gtest LINK_PUBLIC pdb GTest::gtest GTest::gtest_main)

@@ -36,13 +36,15 @@ class OpenFixture : public ::testing::Test {
             srand (time (nullptr));
         }
 
-        // compute the index of a 5-Pancake as its contents read as an int
-        int index (npancake_t pancake) const {
-            return pancake[0]*10'000 +
+        // compute the index of a 5-Pancake as its contents read as an int.
+        // However, pdbs index entries by a pdbval_t which is usually a signed
+        // byte and hence the mod 256 is taken
+        pdb::pdbval_t index (npancake_t pancake) const {
+            return (pancake[0]*10'000 +
                 pancake[1]*1'000 +
                 pancake[2]*100 +
                 pancake[3]*10 +
-                pancake[4];
+                pancake[4]) % 256;
         }
 
         // return a vector with nbitems nodes of random instances of the
@@ -53,7 +55,8 @@ class OpenFixture : public ::testing::Test {
 
             // add the random instances
             for (auto j = 0 ; j < nbitems ; j++) {
-                values.push_back (pdb::node_t<npancake_t> (randInstance (5)));
+                auto instance = randInstance (5);
+                values.push_back (pdb::node_t<npancake_t> (instance, index (instance)));
             }
 
             return values;
@@ -73,7 +76,7 @@ class OpenFixture : public ::testing::Test {
             // increasing order of their index which is given by their contents
             // read as an int.
             for (auto v : values) {
-                open.insert (v, index (v.get_state ()));
+                open.insert (v);
             }
 
             // and return the vector of values inserted in the open list

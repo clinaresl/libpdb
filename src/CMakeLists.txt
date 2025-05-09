@@ -5,6 +5,7 @@ add_library (pdb
   structs/PDBnode_t.h
   structs/PDBopen_t.h
   structs/PDBpdb_t.h
+  algorithm/PDBpdb.h
   )
 
 # Generate the main header file from its template

@@ -47,7 +47,8 @@ TEST_F (OpenFixture, NPancakeSize) {
     while (idx <= MAX_NB_BUCKETS ) {
 
         // insert a node with a random instance of the 5-Pancake at this index
-        open.insert (pdb::node_t (randInstance (5)), idx);
+        npancake_t instance = randInstance (5);
+        open.insert (pdb::node_t (instance, idx));
 
         // in this test, items are inserted in increasing order, thus, verify
         // that the maximum index progresses accordingly, whereas the minimum
@@ -160,14 +161,14 @@ TEST_F (OpenFixture, NPancakeRemove) {
         vector<pdb::node_t<npancake_t>> values = populate (open, MAX_VALUES);
 
         // create a histogram with the observations of the indices of all
-        // values. Indices range in the interval [12345, 54321]
-        vector<int> histogram (55'000);
+        // values. Indices range in the interval [0, 256)
+        vector<int> histogram (256);
         for (auto v : values ) {
             histogram[index (v.get_state ())]++;
         }
 
         // verify the histogram corresponds with the data stored in the bucket
-        for (auto j = 0 ; j < 55'000 ; j++) {
+        for (auto j = 0 ; j < 256 ; j++) {
             ASSERT_EQ (open.size (j), histogram[j]);
         }
 
@@ -186,7 +187,7 @@ TEST_F (OpenFixture, NPancakeRemove) {
 
             // verify the histogram corresponds with the data stored in the bucket
             histogram[idx]--;
-            for (auto j = 0 ; j < 55'000 ; j++) {
+            for (auto j = 0 ; j < 256 ; j++) {
                 ASSERT_EQ (open.size (j), histogram[j]);
             }
 
@@ -235,14 +236,14 @@ TEST_F (OpenFixture, NPancakeInsertRemove) {
         vector<pdb::node_t<npancake_t>> values = populate (open, MAX_VALUES);
 
         // create a histogram with the observations of the indices of all
-        // values. Indices range in the interval [12345, 54321]
-        vector<int> histogram (55'000);
+        // values. Indices range in the interval [0, 256)
+        vector<int> histogram (256);
         for (auto v : values ) {
             histogram[index (v.get_state ())]++;
         }
 
         // verify the histogram corresponds with the data stored in the bucket
-        for (auto j = 0 ; j < 55'000 ; j++) {
+        for (auto j = 0 ; j < 256 ; j++) {
             ASSERT_EQ (open.size (j), histogram[j]);
         }
 
@@ -278,7 +279,7 @@ TEST_F (OpenFixture, NPancakeInsertRemove) {
 
                 // insert an item from the vector of additional data
                 auto loc = random () % data.size ();
-                open.insert (data[loc], index (data[loc].get_state ()));
+                open.insert (data[loc]);
 
                 // ensure that values contains the same data stored in the bucket
                 values.push_back (data[loc]);

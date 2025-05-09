@@ -89,7 +89,7 @@ namespace pdb {
 
         // Explicit constructor ---it is mandatory to provide the number of
         // items that will be stored in the PDB
-        explicit pdb_t (const int size) :
+        explicit pdb_t (const pdboff_t size) :
             _address { std::vector<pdbval_t>(size, pdbzero) },
             _size { 0 }
             {}
@@ -389,7 +389,7 @@ namespace pdb {
         size_t size () const
             { return _size; }
 
-    }; // class pdb_t<T>
+    }; // class pdb_t<node_t<T>>
 
 } // namespace pdb
 

@@ -14,7 +14,6 @@
 #define _NPANCAKE_T_H_
 
 #include<algorithm>
-#include <cstdint>
 #include<iostream>
 #include<iterator>
 #include<string>
@@ -181,7 +180,7 @@ public:
     //          b. Abstract state: if the first disc below the spatula has not
     //                             been abstracted away, then it is its radius;
     //                             otherwise, the default cost is used
-    void children (std::vector<std::tuple<uint8_t, npancake_t>>& successors) {
+    void children (std::vector<std::tuple<pdb::pdbval_t, npancake_t>>& successors) {
 
         // for all locations
         for (auto i=1; i < _n; i++) {
@@ -208,7 +207,7 @@ public:
 
             // Add this successor to the vector of successors along with its
             // cost
-            successors.push_back (std::tuple<uint8_t, npancake_t>{
+            successors.push_back (std::tuple<pdb::pdbval_t, npancake_t>{
                     g,
                     npancake_t (_flip (i))});
         }

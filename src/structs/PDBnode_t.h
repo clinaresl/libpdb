@@ -13,7 +13,6 @@
 #ifndef _PDBNODE_T_H_
 #define _PDBNODE_T_H_
 
-#include <stdint.h>
 #include <vector>
 
 #include "../PDBdefs.h"
@@ -29,7 +28,7 @@ namespace pdb {
         // also its g-value. The g-value is always assumed to fit in an unsigned
         // integer
         T _state;
-        uint8_t _g;
+        pdbval_t _g;
 
     public:
 
@@ -37,13 +36,13 @@ namespace pdb {
         node_t () = delete;
 
         // Explicit constructor
-        node_t (const T& state, const uint8_t g=0) :
+        node_t (const T& state, const pdbval_t g=0) :
             _state { state},
             _g { g }
             {}
 
         // getters
-        uint8_t get_g () const {
+        pdbval_t get_g () const {
             return _g;
         }
         const T& get_state () const {

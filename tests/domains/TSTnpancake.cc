@@ -55,7 +55,7 @@ TEST_F (NPancakeFixture, SuccessorsUnitReal) {
         npancake_t instance = randInstance (length);
 
         // now, expand this node and generate all children
-        vector<tuple<uint8_t, npancake_t>> successors;
+        vector<tuple<pdb::pdbval_t, npancake_t>> successors;
         instance.children (successors);
 
         // first, verify the number of descendants equals its length minus one
@@ -65,7 +65,7 @@ TEST_F (NPancakeFixture, SuccessorsUnitReal) {
         vector<int> flips;
         transform (successors.begin (), successors.end (),
                    back_inserter (flips),
-                   [&] (tuple<uint8_t, npancake_t> successor) {
+                   [&] (tuple<pdb::pdbval_t, npancake_t> successor) {
                        return getPrefix (instance, get<1> (successor));
                    });
 
@@ -98,7 +98,7 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCostReal) {
         npancake_t instance = randInstance (length);
 
         // now, expand this node and generate all children
-        vector<tuple<uint8_t, npancake_t>> successors;
+        vector<tuple<pdb::pdbval_t, npancake_t>> successors;
         instance.children (successors);
 
         // first, verify the number of descendants equals its length minus one
@@ -108,7 +108,7 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCostReal) {
         vector<int> flips;
         transform (successors.begin (), successors.end (),
                    back_inserter (flips),
-                   [&] (tuple<uint8_t, npancake_t> successor) {
+                   [&] (tuple<pdb::pdbval_t, npancake_t> successor) {
                        return getPrefix (instance, get<1> (successor));
                    });
 
@@ -172,7 +172,7 @@ TEST_F (NPancakeFixture, SuccessorsUnitAbstract) {
             npancake_t instance {pdb.mask (state.get_perm ())};
 
             // now, expand this node and generate all children
-            vector<tuple<uint8_t, npancake_t>> successors;
+            vector<tuple<pdb::pdbval_t, npancake_t>> successors;
             instance.children (successors);
 
             // first, verify the number of descendants equals its length minus one
@@ -239,7 +239,7 @@ TEST_F (NPancakeFixture, SuccessorsHeavyCostAbstract) {
             npancake_t instance {pdb.mask (state.get_perm ())};
 
             // now, expand this node and generate all children
-            vector<tuple<uint8_t, npancake_t>> successors;
+            vector<tuple<pdb::pdbval_t, npancake_t>> successors;
             instance.children (successors);
 
             // first, verify the number of descendants equals its length minus one

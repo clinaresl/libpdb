@@ -31,7 +31,7 @@ namespace pdb {
     // PDB nodes are generated over a predefined type that has to provide a
     // number of services described below
     template<typename T>
-    concept pdb_type = requires (T item, std::vector<std::tuple<uint8_t, T>> successors) {
+    concept pdb_type = requires (T item, std::vector<std::tuple<pdbval_t, T>> successors) {
 
         // PDBs are created by running a backwards brute-force breadth-first search.
         // It is necessary for the items to be able to compute their predecessors

@@ -65,7 +65,7 @@ protected:
             prev.insert (iperm);
 
             // and add it to the vector of instances to return
-            pdb::node_t<npancake_t> ipancake {iperm, uint8_t (1 + (rand ()%MAX_VALUES))};
+            pdb::node_t<npancake_t> ipancake {iperm, pdb::pdbval_t (1 + (rand ()%MAX_VALUES))};
             instances.push_back (ipancake);
         }
 
@@ -100,7 +100,7 @@ protected:
             prev.insert (instance);
 
             // and add it to the vector of instances to return
-            pdb::node_t<npancake_t> ipancake {instance, uint8_t (1 + (rand ()%MAX_VALUES))};
+            pdb::node_t<npancake_t> ipancake {instance, pdb::pdbval_t (1 + (rand ()%MAX_VALUES))};
             instances.push_back (ipancake);
         }
 

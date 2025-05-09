@@ -23,6 +23,14 @@
 
 namespace pdb {
 
+    // Custom deleter used to avoid calling a destructor
+    template<typename T>
+    struct _no_op_deleter {
+        void operator()(T *ptr) const noexcept {
+            // Do nothing: pass
+        }
+    };
+
     // Forward declaration
     template<typename PDBNodeT>
     class pdb;
@@ -54,10 +62,22 @@ namespace pdb {
         std::chrono::duration<double, std::milli> _elapsed_time;
         size_t _nbexpansions;
 
+        // As a result the PDB is stored internally
+        pdb_t<node_t<T>> *_pdb;
+
+    private:
+
     public:
 
         // Default constructors are forbidden
         pdb () = delete;
+
+        // provide a destructor to free the memory allocated to _pdb
+        ~pdb () {
+            if (_pdb != nullptr) {
+                delete _pdb;
+            }
+        }
 
         // Explicit constructor ---it is mandatory to provide the goal and both
         // patterns, those used for generating the pattern (p_pattern) and also
@@ -68,7 +88,8 @@ namespace pdb {
             _goal         {     goal },
             _c_pattern    { cpattern },
             _p_pattern    { ppattern },
-            _nbexpansions {        0 }
+            _nbexpansions {        0 },
+            _pdb          {  nullptr }
             {}
 
         // getters
@@ -90,9 +111,9 @@ namespace pdb {
 
         // methods
 
-        // generate returns a PDB with the minimum cost to reach the goal
-        // defined in this instance from every abstract state as given in the
-        // ppatern used to create this instance.
+        // generate a PDB with the minimum cost to reach the goal defined in
+        // this instance from every abstract state as given in the ppatern used
+        // to create this instance. The resulting PDB is internallly stored.
         //
         // If cpattern induces a superset of the abstract state space induced by
         // ppatern, then the resulting PDB contains the minimum cost among all
@@ -109,23 +130,17 @@ namespace pdb {
             // description. Note that the goal description should be explicit,
             // i.e., no state should be abstracted
             pdboff_t pspace = pdb_t<node_t<T>>::address_space (_p_pattern);
-            // std::cout << " address space (ppattern): " << pspace << std::endl; std::cout.flush ();
-            pdb_t<node_t<T>> ppdb (pspace);
-            ppdb.init (_goal, _p_pattern);
+            auto _pdb_raw = ::operator new (sizeof (pdb_t<node_t<T>>));
+            _pdb = new (_pdb_raw) pdb_t<node_t<T>> (pspace);
+            _pdb->init (_goal, _p_pattern);
 
             pdboff_t cspace = pdb_t<node_t<T>>::address_space (_c_pattern);
-            // std::cout << " address space (cpattern): " << cspace << std::endl; std::cout.flush ();
             pdb_t<node_t<T>> cpdb (cspace);
             cpdb.init (_goal, _c_pattern);
 
             // next, abstract the goal state. The _c_pattern is used here, since
             // this is the pattern used during the search
             std::vector<int> agoal = cpdb.mask (_goal);
-            // std::cout << " goal: ";
-            // for (auto iitem : agoal) {
-            //     std::cout << iitem << " ";
-            // }
-            // std::cout << std::endl; std::cout.flush ();
 
             // and seed the open list with this abstract state and g=1. The
             // g-value of all annotations in a PDB are incremented in one unit
@@ -143,24 +158,9 @@ namespace pdb {
                 // increasing order of their g-value
                 node_t<T> node = open.pop_front ();
 
-                // auto perm = node.get_state ().get_perm ();
-                // std::cout << " \t Expanding node " << std::endl;
-                // std::cout << " \t perm: ";
-                // for (auto iitem : perm) {
-                //     std::cout << iitem << " ";
-                // }
-                // std::cout << std::endl; std::cout.flush ();
-                // std::cout << " \t    g: " << int (node.get_g ()) << std::endl << std::endl; std::cout.flush ();
-
-                // first, look for it in closed
-                // std::cout << " \t cPDB: " << std::endl; std::cout.flush ();
-                // for (auto i = 0 ; i < cspace ; i++) {
-                //     std::cout << " \t\t cPDB[" << i << "]: " << int (cpdb[i]) << std::endl;
-                // }
-                // std::cout.flush ();
+                // check whether this abstract state has been expanded before or
+                // not
                 if (cpdb.find (node) != std::string::npos) {
-
-                    // std::cout << " \t node found in closed!" << std::endl << std::endl; std::cout.flush ();
 
                     // If found, then skip it. The state space of the closed
                     // list is a superset (or equal) to the state space of the
@@ -179,13 +179,13 @@ namespace pdb {
                 // (recall that nodes as traversed by the search algorithm are
                 // masked with the pattern given to the closed list!). Use the
                 // resulting permutation to create a node_t
-                std::vector<int> pperm = ppdb.mask (node.get_state ().get_perm ());
+                std::vector<int> pperm = _pdb->mask (node.get_state ().get_perm ());
                 node_t<T> pnode = node_t<T>(T (pperm), node.get_g ());
-                if (ppdb.find (pnode) == std::string::npos) {
+                if (_pdb->find (pnode) == std::string::npos) {
 
                     // if it is not found, then annotate the g-value of this
                     // node (which was incremented in one unit) in the PDB
-                    ppdb.insert (pnode);
+                    _pdb->insert (pnode);
                 }
 
                 // now, expand this abstract state and generate all children
@@ -219,6 +219,66 @@ namespace pdb {
             // stop the chrono and register the elapsed time
             auto stop = std::chrono::high_resolution_clock::now();
             _elapsed_time = stop - start;
+        }
+
+        // verify that data has been seemingly well written. Seemingly, because
+        // there is no formal way to verify the contents of a PDB. It just
+        // performs two operations:
+        //
+        // 1. It checks there is only one entry with the value 1 (which because
+        //    they are incremented, should correspond to the abstract goal
+        //    state, and there should be only one)
+        //
+        // 2. Verify there is no entry with the value pdbzero
+        //
+        // 3. It also verifies that the number of nodes being expanded is equal
+        //    to the size of the abstract state space
+        bool doctor () const {
+
+            // count the number of locations with a value equal to 1
+            int nbones = 0;
+
+            // verify the number of expansions is equal to the size of the
+            // abstract state space
+            pdboff_t pspace = pdb_t<node_t<T>>::address_space (_p_pattern);
+            if (_nbexpansions != pspace) {
+                return false;
+            }
+
+            // traverse the whole state space of the PDB generated
+            for (auto address = 0 ; address < pspace ; address++) {
+
+                // check this position has a value other than pdbzero
+                if (_pdb->at (address) == pdbzero) {
+                    return false;
+                }
+
+                // check whether this entry  has a value equal to 1
+                if (_pdb->at(address) == pdbval_t (1)) {
+                    nbones++;
+                }
+            }
+
+            // Before leaving, ensure there is only one location with a value
+            // equal to 1
+            if (nbones != 1) {
+                return false;
+            }
+
+            // At this point, the PDB is deemed as being correctly generated,
+            // but cross your fingers!!
+            return true;
+        }
+
+        // return the number of positions of this PDB
+        pdboff_t size () const {
+
+            // take into account that the _pdb might have not been generated
+            // yet!
+            if (_pdb == nullptr) {
+                return 0;
+            }
+            return _pdb->size ();
         }
 
     }; // class pdb<node_t<T>>

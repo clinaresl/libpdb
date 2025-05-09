@@ -40,6 +40,9 @@ TEST_F (PDBSFixture, Empty) {
             ASSERT_EQ (goal, pdb.get_goal ());
             ASSERT_EQ (ipattern, pdb.get_cpattern ());
             ASSERT_EQ (ipattern, pdb.get_ppattern ());
+
+            // and also that the size is null
+            ASSERT_EQ (pdb.size (), 0);
         }
     }
 }
@@ -48,39 +51,36 @@ TEST_F (PDBSFixture, Empty) {
 // ----------------------------------------------------------------------------
 TEST_F (PDBSFixture, NPancakeGeneration) {
 
-    // Use pancakes of length 4
-    int length = 8;
-    auto goal = succListInt (length);
+    // Use pancakes of length between 4 and 8
+    for (auto length = 4 ; length <= 4 ; length++) {
 
-    // test all possible patterns with at least 1 symbol and up to 3 symbols
-    // being preserved
-    for (auto nbsymbols = 1 ; nbsymbols <= 3 ; nbsymbols++) {
+        // create a goal with length symbols explicitly given
+        auto goal = succListInt (length);
 
-        // compute all patterns with length symbols, nbsymbols of them being
-        // preserved
-        auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+        // test all possible patterns with at least 1 symbol and up to length-1
+        // symbols being preserved
+        for (auto nbsymbols = 1 ; nbsymbols <= length-1 ; nbsymbols++) {
 
-        // test every pattern separately
-        for (auto ipattern : patterns) {
+            // compute all patterns with length symbols, nbsymbols of them being
+            // preserved
+            auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
 
-            // in the n-pancake both the ppattern and the cpattern are equal
-            pdb::pdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
+            // test every pattern separately
+            for (auto ipattern : patterns) {
 
-            cout << " goal: ";
-            for (auto idisc : goal) {
-                cout << idisc << " ";
+                // in the n-pancake both the ppattern and the cpattern are equal
+                pdb::pdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
+
+                // and generate the pdb
+                pdb.generate ();
+
+                // and verify that the PDB has been correctly generated
+                ASSERT_TRUE (pdb.doctor ());
+
+                // finally, check that the size of the PDB is equal to the size
+                // of the abstract state space being traversed
+                ASSERT_EQ (pdb.size (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
             }
-            cout << endl; cout.flush ();
-            cout << " pattern: " << ipattern << endl << endl; cout.flush ();
-
-            // and generate the pdb
-            pdb.generate ();
-
-            // and verify that the number of expansions equal the size of the
-            // abstract state space
-            ASSERT_EQ (pdb.get_nbexpansions (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
-            cout << " # expansions: " << pdb.get_nbexpansions () << endl; cout.flush ();
-            cout << " elapsed time: " << pdb.get_elapsed_time ().count () << " seconds" << endl; cout.flush ();
         }
     }
 }

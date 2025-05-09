@@ -245,6 +245,17 @@ namespace pdb {
             return _address[index];
         }
 
+        // given a stable index, return the value stored at that location. In
+        // case the index is incorrect, an exception is raised
+        pdbval_t at (const pdboff_t index) {
+
+            // Bound check
+            if (index >= _address.size ()) {
+                throw std::runtime_error (" [pdb_t] Access out of bounds");
+            }
+            return _address[index];
+        }
+
         // return a stable index to the item given (as a node_t) in case it is
         // found in the PDB. Otherwise, return string::npos
         pdboff_t find (const node_t<T>& item) const {

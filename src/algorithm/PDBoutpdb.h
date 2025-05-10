@@ -17,6 +17,8 @@
 
 namespace pdb {
 
+    enum class error_message {no_error, address_space, nb_ones, zero};
+
     // Forward declaration
     template<typename PDBNodeT>
     class outpdb;
@@ -48,6 +50,9 @@ namespace pdb {
         std::chrono::duration<double, std::milli> _elapsed_time;
         size_t _nbexpansions;
 
+        // among them, the type of error, if any
+        error_message _error;
+
     public:
 
         // Default constructors are forbidden
@@ -60,8 +65,9 @@ namespace pdb {
                 const std::string_view cpattern,
                 const std::string_view ppattern) :
             pdb<node_t<T>>(goal, ppattern),
-            _c_pattern                 { cpattern },
-            _nbexpansions              {        0 }
+            _c_pattern                 {                cpattern },
+            _nbexpansions              {                       0 },
+            _error                     { error_message::no_error }
             { }
 
         // getters
@@ -73,6 +79,9 @@ namespace pdb {
         }
         const size_t get_nbexpansions () const {
             return _nbexpansions;
+        }
+        const error_message get_error () const {
+            return _error;
         }
 
         // methods
@@ -96,7 +105,7 @@ namespace pdb {
             // description. Note that the goal description should be explicit,
             // i.e., no state should be abstracted
             pdboff_t pspace = pdb_t<node_t<T>>::address_space (pdb<node_t<T>>::_p_pattern);
-            auto _pdb_raw = ::operator new (sizeof (pdb_t<node_t<T>>));
+            auto _pdb_raw = ::operator new (sizeof (pdb_t<node_t<T>>(pspace)));
             pdb<node_t<T>>::_pdb = new (_pdb_raw) pdb_t<node_t<T>> (pspace);
             pdb<node_t<T>>::_pdb->init (pdb<node_t<T>>::_goal, pdb<node_t<T>>::_p_pattern);
 
@@ -193,13 +202,18 @@ namespace pdb {
         //
         // 1. It checks there is only one entry with the value 1 (which because
         //    they are incremented, should correspond to the abstract goal
-        //    state, and there should be only one)
+        //    state, and there should be only one) (error nb_ones)
         //
-        // 2. Verify there is no entry with the value pdbzero
+        // 2. Verify there is no entry with the value pdbzero (error zero)
         //
         // 3. It also verifies that the number of nodes being expanded is equal
-        //    to the size of the abstract state space
-        bool doctor () const {
+        //    to the size of the abstract state space (error address_space)
+        //
+        // In case an error is diagnosed, _error is updated and
+        // get_error_message can be used to get a string explaining the error
+        // found. It reports only one error, if any, even if the PDB is
+        // inconsistent in more than one regard.
+        bool doctor () {
 
             // count the number of locations with a value equal to 1
             int nbones = 0;
@@ -208,6 +222,7 @@ namespace pdb {
             // abstract state space
             pdboff_t pspace = pdb_t<node_t<T>>::address_space (pdb<node_t<T>>::_p_pattern);
             if (_nbexpansions != pspace) {
+                _error = error_message::address_space;
                 return false;
             }
 
@@ -216,6 +231,7 @@ namespace pdb {
 
                 // check this position has a value other than pdbzero
                 if (pdb<node_t<T>>::_pdb->at (address) == pdbzero) {
+                    _error = error_message::zero;
                     return false;
                 }
 
@@ -228,12 +244,33 @@ namespace pdb {
             // Before leaving, ensure there is only one location with a value
             // equal to 1
             if (nbones != 1) {
+                _error = error_message::nb_ones;
                 return false;
             }
 
             // At this point, the PDB is deemed as being correctly generated,
             // but cross your fingers!!
             return true;
+        }
+
+        // return a string representing the current error
+        std::string get_error_message () const {
+            std::string output;
+            switch (_error) {
+                case error_message::no_error:
+                    output = "No error";
+                    break;
+                case error_message::address_space:
+                    output = "Address space";
+                    break;
+                case error_message::nb_ones:
+                    output = "Number of ones";
+                    break;
+                case error_message::zero:
+                    output = "Zero entries found";
+                    break;
+            }
+            return output;
         }
 
     }; // class outpdb<node_t<T>>

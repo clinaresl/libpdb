@@ -75,7 +75,13 @@ TEST_F (OutPDBFixture, NPancakeGeneration) {
                 pdb.generate ();
 
                 // and verify that the PDB has been correctly generated
-                ASSERT_TRUE (pdb.doctor ());
+                if (!pdb.doctor ()) {
+                    cout << " Doctor: " << pdb.get_error_message () << endl; cout.flush ();
+                    cout << "         Address space: " << pdb.size () << endl; cout.flush ();
+                    cout << "         # expansions : " << pdb.get_nbexpansions () << endl; cout.flush ();
+                    cout << "         ipattern     : " << ipattern << endl; cout.flush ();
+                    ASSERT_TRUE (false);
+                }
 
                 // finally, check that the size of the PDB is equal to the size
                 // of the abstract state space being traversed

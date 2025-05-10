@@ -279,12 +279,13 @@ namespace pdb {
         // permutations, i.e., it accepts NONPAT in perm. In case any symbol in
         // perm is NONPAT it is copied to the output as NONPAT as well in spite
         // of the pattern
-        //
-        // It is not expected to use this function often. Instead, 'pdb_type's
-        // should be able to handle abstract states and to generate its children
-        // automatically so that this operation should be done only once for
-        // seeding the open list of the PDB generator
         std::vector<int> mask (const std::vector<int>& perm) {
+
+            // first of all, verify the given permutation has the same size used
+            // to initialize this pdb
+            if (_n != perm.size ()) {
+                throw std::invalid_argument (" [mask] The permutation has not the length used in the initialization of this PDB");
+            }
 
             // sort the pattern according to its symbols
             auto max_symb = std::max_element (_goal.begin (), _goal.end ());
@@ -294,21 +295,13 @@ namespace pdb {
 
                 // in case this position is abstracted away, substitute it by
                 // NONPAT and preserve it otherwise
-                if (_pattern[i] == '*') {
-                    smask[_goal[i]] = int (NONPAT);
-                } else {
-                    smask[_goal[i]] = _goal[i];
-                }
+                smask[_goal[i]] = (_pattern[i] == '*') ? int (NONPAT) : _goal[i];
             }
 
             // from this mask return the corresponding masked permutation
             std::vector<int> result;
             for (auto i = 0 ; i < int (perm.size ()) ; i++) {
-                if (perm [i] == NONPAT) {
-                    result.push_back (NONPAT);
-                } else {
-                    result.push_back (smask[perm[i]]);
-                }
+                result.push_back ( (perm [i] == NONPAT) ? int (NONPAT) : smask[perm[i]] );
             }
 
             return result;
@@ -330,8 +323,6 @@ namespace pdb {
                 throw std::invalid_argument (" [rank] The permutation has not the length used in the initialization of this PDB");
             }
 
-            int n = _n;
-
             // initialize the rank of the permutation to 0 and also the series of
             // factors to use
             pdboff_t r = 0L;
@@ -352,15 +343,17 @@ namespace pdb {
                 //
                 // WARNING - delivering a permutation perm which is not
                 // compatible with _omask would produced undefined behaviour
-                if (perm[i] != pdb::NONPAT & _omask[perm[i]] >= 0) {
+                if (perm[i] != pdb::NONPAT) {
+                    if (_omask[perm[i]] >= 0) {
 
-                    // push it to the end of the partial permutation and store its
-                    // location in the inverse permutation
-                    p[_omask[perm[i]]] = i;
-                    q[i] = _omask[perm[i]];
+                        // push it to the end of the partial permutation and store its
+                        // location in the inverse permutation
+                        p[_omask[perm[i]]] = i;
+                        q[i] = _omask[perm[i]];
 
-                    // and increment the number of symbols being computed
-                    nbsymbols++;
+                        // and increment the number of symbols being computed
+                        nbsymbols++;
+                    }
                 }
             }
 
@@ -371,6 +364,7 @@ namespace pdb {
             }
 
             // compute the rank
+            int n = _n;
             int s, w;
             while (n > _n - _nbsymbols) {
 

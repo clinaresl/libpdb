@@ -13,6 +13,11 @@
 #ifndef _PDBOUTPDB_H_
 #define _PDBOUTPDB_H_
 
+#include<cstdint>
+#include<filesystem>
+#include<fstream>
+#include<limits>
+
 #include "PDBpdb.h"
 
 namespace pdb {
@@ -53,18 +58,62 @@ namespace pdb {
         // among them, the type of error, if any
         error_message _error;
 
+    private:
+
+        // write the binary data given as a vector of uint8_t at the end of the
+        // ofstream out and return true if the operation was feasible and false
+        // otherwise
+        bool _write (std::ofstream& out, std::vector<uint8_t> data) {
+
+            out.write(reinterpret_cast<const char*>(data.data ()),
+                      static_cast<std::streamsize>(data.size()));
+            if (!out) {
+                return false;
+            }
+            return true;
+        }
+
+        // return a vector of binary data with the contents of another vector
+        // which consists of ints. In case any of the ints exceed the maximum
+        // value for uint8_t, an exception is raised
+        void _int_to_binary (const std::vector<int> data,
+                             std::vector<uint8_t>& result) {
+
+            for (const auto item: data) {
+                if (item > std::numeric_limits<uint8_t>::max()) {
+                    throw std::runtime_error ("[_int_to_binary] an item was found whose vallue exceeds the range of uint8_t");
+                }
+                result.push_back (uint8_t (item));
+            }
+        }
+
+        // return a vector of binary data with the contents of a string_view. In
+        // case any of the characters exceed the maximum value for uint8_t, an
+        // exception is raised
+        void _sv_to_binary (const std::string_view data,
+                            std::vector<uint8_t>& result) {
+
+            for (const auto item: data) {
+                if (item > std::numeric_limits<uint8_t>::max()) {
+                    throw std::runtime_error ("[_sv_to_binary] an item was found whose vallue exceeds the range of uint8_t");
+                }
+                result.push_back (uint8_t (item));
+            }
+        }
+
     public:
 
         // Default constructors are forbidden
         outpdb () = delete;
 
-        // Explicit constructor ---it is mandatory to provide the goal and both
-        // patterns, those used for generating the pattern (p_pattern) and also
-        // the one used to search (c_pattern)
-        outpdb (const std::vector<int>& goal,
+        // Explicit constructor ---it is mandatory to provide the pdb mode, the
+        // goal and both patterns, those used for generating the pattern
+        // (p_pattern) and also the one used to search (c_pattern)
+        outpdb (pdb_mode mode,
+                const std::vector<int>& goal,
                 const std::string_view cpattern,
                 const std::string_view ppattern) :
-            pdb<node_t<T>>(goal, ppattern),
+            pdb<node_t<T>>(mode, goal, ppattern),
             _c_pattern                 {                cpattern },
             _nbexpansions              {                       0 },
             _error                     { error_message::no_error }
@@ -250,6 +299,68 @@ namespace pdb {
 
             // At this point, the PDB is deemed as being correctly generated,
             // but cross your fingers!!
+            return true;
+        }
+
+        // return true if it was possiblle to write the contents of the
+        // generated pdb into the specified file and false otherwise. The binary
+        // file is started with a header that contains the following info:
+        //
+        // 1. pdb mode: either MAX or ADD
+        // 2. The goal given in explicit form
+        // 3. The pattern used to generate the abstract state space
+        bool write (const std::filesystem::path& path) {
+
+            // Try to open the file and if it is not possible, then return false
+            std::ofstream out(path, std::ios::binary | std::ios::trunc);
+            if (!out.is_open()) {
+                return false;
+            }
+
+            // Now write the binary data stored in the pdb in case there is any
+            if (pdb<node_t<T>>::_pdb != nullptr) {
+
+                // first, write the header which consists of:
+                // 1. The pdb mode (_mode): MAX or ADD
+                std::vector<uint8_t> header;
+                if (pdb<node_t<T>>::_mode == pdb_mode::max) {
+                    header = std::vector<uint8_t> {'M', 'A', 'X'};
+                } else {
+                    header = std::vector<uint8_t> {'A', 'D', 'D'};
+                }
+
+                // 2. The length of the goal (_n): which has to be equal to the
+                //    length of both patterns
+                header.push_back (uint8_t (pdb<node_t<T>>::_pdb->get_n ()));
+
+                // 3. The goal (_goal): consists of a explicit definition of
+                //    the goal state in the true state space
+                std::vector<uint8_t> goal;
+                _int_to_binary (pdb<node_t<T>>::_goal, goal);
+                header.insert (header.end (), goal.begin (), goal.end ());
+
+                // 3. The ppattern (_p_pattern): used to generate this PDB
+                std::vector<uint8_t> ppattern;
+                _sv_to_binary (pdb<node_t<T>>::_p_pattern, ppattern);
+                header.insert (header.end (), ppattern.begin (), ppattern.end ());
+
+                // 4. The cpattern (_c_pattern): used to determine the abstract
+                //    space to traverse to generate the PDB
+                std::vector<uint8_t> cpattern;
+                _sv_to_binary (_c_pattern, cpattern);
+                header.insert (header.end (), cpattern.begin (), cpattern.end ());
+
+                // and write the header
+                if (!_write (out, header)) {
+                    return false;
+                }
+
+                // Finally, write the PDB binary data into this file
+                if (!_write (out, pdb<node_t<T>>::_pdb->get_address ())) {
+                    return false;
+                }
+            }
+
             return true;
         }
 

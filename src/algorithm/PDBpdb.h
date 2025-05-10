@@ -52,6 +52,9 @@ namespace pdb {
         std::vector<int> _goal;
         std::string_view _p_pattern;
 
+        // the type of the PDB is stored in the following data member
+        pdb_mode _mode;
+
         // As a result the PDB is stored internally
         pdb_t<node_t<T>> *_pdb;
 
@@ -62,10 +65,12 @@ namespace pdb {
 
         // Explicit constructor ---it is mandatory to provide the goal and the
         // pattern used for generating abstract states (p_pattern)
-        pdb (const std::vector<int>& goal,
+        pdb (pdb_mode mode,
+            const std::vector<int>& goal,
              const std::string_view ppattern) :
             _goal         {     goal },
             _p_pattern    { ppattern },
+            _mode         {     mode },
             _pdb          {  nullptr }
             {}
 
@@ -73,6 +78,7 @@ namespace pdb {
         ~pdb () {
             if (_pdb != nullptr) {
                 delete _pdb;
+                _pdb = nullptr;
             }
         }
 

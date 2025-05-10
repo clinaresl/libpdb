@@ -102,6 +102,14 @@ namespace pdb {
         pdb_t& operator=(const pdb_t&) = delete;
         pdb_t& operator=(pdb_t&&) = delete;
 
+        // getters
+        int get_n () const {
+            return _n;
+        }
+        const std::vector<pdbval_t>& get_address () const {
+            return _address;
+        }
+
         // methods
 
         // return the size of the address space required to store all

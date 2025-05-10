@@ -13,6 +13,8 @@
 #ifndef _TSTOUTPDBFIXTURE_H_
 #define _TSTOUTPDBFIXTURE_H_
 
+#include<filesystem>
+
 #include "gtest/gtest.h"
 
 #include "../TSTdefs.h"

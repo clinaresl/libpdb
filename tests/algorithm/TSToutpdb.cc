@@ -10,13 +10,13 @@
 // Unit tests for testing the creation of PDBs
 //
 
-#include "../fixtures/TSTpdbsfixture.h"
+#include "../fixtures/TSToutpdbfixture.h"
 
 using namespace std;
 
-// check that PDBs are properly created
+// check that outPDBs are properly created
 // ----------------------------------------------------------------------------
-TEST_F (PDBSFixture, Empty) {
+TEST_F (OutPDBFixture, Empty) {
 
     // Use pancakes of length 8
     int length = 8;
@@ -34,7 +34,7 @@ TEST_F (PDBSFixture, Empty) {
         for (auto ipattern : patterns) {
 
             // in the n-pancake both the ppattern and the cpattern are equal
-            pdb::pdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
+            pdb::outpdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
 
             // and verify that the goal, and both patterns are correctly stored
             ASSERT_EQ (goal, pdb.get_goal ());
@@ -49,10 +49,10 @@ TEST_F (PDBSFixture, Empty) {
 
 // check that PDBs are correctly generated in the N-Pancake domain
 // ----------------------------------------------------------------------------
-TEST_F (PDBSFixture, NPancakeGeneration) {
+TEST_F (OutPDBFixture, NPancakeGeneration) {
 
     // Use pancakes of length between 4 and 8
-    for (auto length = 4 ; length <= 4 ; length++) {
+    for (auto length = 4 ; length <= 8 ; length++) {
 
         // create a goal with length symbols explicitly given
         auto goal = succListInt (length);
@@ -69,7 +69,7 @@ TEST_F (PDBSFixture, NPancakeGeneration) {
             for (auto ipattern : patterns) {
 
                 // in the n-pancake both the ppattern and the cpattern are equal
-                pdb::pdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
+                pdb::outpdb<pdb::node_t<npancake_t>> pdb (goal, ipattern, ipattern);
 
                 // and generate the pdb
                 pdb.generate ();

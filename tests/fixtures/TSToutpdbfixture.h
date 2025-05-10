@@ -10,20 +10,20 @@
 // Fixture used to test the creation of PDBs
 //
 
-#ifndef _TSTPDBSFIXTURE_H_
-#define _TSTPDBSFIXTURE_H_
+#ifndef _TSTOUTPDBFIXTURE_H_
+#define _TSTOUTPDBFIXTURE_H_
 
 #include "gtest/gtest.h"
 
 #include "../TSTdefs.h"
 #include "../TSThelpers.h"
-#include "../../src/algorithm/PDBpdb.h"
+#include "../../src/algorithm/PDBoutpdb.h"
 #include "../../domains/n-pancake/npancake_t.h"
 
 // Class definition
 //
-// Defines a Google test fixture for testing PDBs
-class PDBSFixture : public ::testing::Test {
+// Defines a Google test fixture for testing outPDBs
+class OutPDBFixture : public ::testing::Test {
 
 protected:
 
@@ -35,7 +35,7 @@ protected:
     }
 };
 
-#endif // _TSTPDBSFIXTURE_H_
+#endif // _TSTOUTPDBFIXTURE_H_
 
 // Local Variables:
 // mode:cpp

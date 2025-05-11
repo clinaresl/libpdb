@@ -110,6 +110,21 @@ namespace pdb {
             return _address;
         }
 
+        // operator overloading
+
+        // given a stable index, return the value stored at that location. In
+        // case the index is incorrect, the behaviour is undefined
+        const pdbval_t& operator[] (const pdboff_t index) const {
+            return _address[index];
+        }
+
+        // given a stable index, return a reference to its location, so that it
+        // can be re-written. In case the index is incorrect, an exception is
+        // raised
+        pdbval_t& operator[] (const pdboff_t index) {
+            return _address.at (index);
+        }
+
         // methods
 
         // return the size of the address space required to store all
@@ -243,21 +258,6 @@ namespace pdb {
 
             // and return the location of this item into the vector
             return index;
-        }
-
-        // Lookup
-
-        // given a stable index, return the value stored at that location. In
-        // case the index is incorrect, the behaviour is undefined
-        const pdbval_t& operator[] (const pdboff_t index) const {
-            return _address[index];
-        }
-
-        // given a stable index, return a reference to its location, so that it
-        // can be re-written. In case the index is incorrect, an exception is
-        // raised
-        pdbval_t& operator[] (const pdboff_t index) {
-            return _address.at (index);
         }
 
         // given a stable index, return the value stored at that location. In
@@ -405,7 +405,10 @@ namespace pdb {
             return _address.capacity ();
         }
 
-        // return the number of elements written into the PDB
+        // return the number of elements written into the PDB. Note this value
+        // refers to the number of times insert was used because the operator[]
+        // can also be used to write data but it does not update the data member
+        // _size
         size_t size () const
             { return _size; }
 

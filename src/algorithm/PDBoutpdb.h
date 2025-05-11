@@ -55,9 +55,6 @@ namespace pdb {
         std::chrono::duration<double, std::milli> _elapsed_time;
         size_t _nbexpansions;
 
-        // among them, the type of error, if any
-        error_message _error;
-
     private:
 
         // write the binary data given as a vector of uint8_t at the end of the
@@ -94,9 +91,6 @@ namespace pdb {
                             std::vector<uint8_t>& result) {
 
             for (const auto item: data) {
-                if (item > std::numeric_limits<uint8_t>::max()) {
-                    throw std::runtime_error ("[_sv_to_binary] an item was found whose vallue exceeds the range of uint8_t");
-                }
                 result.push_back (uint8_t (item));
             }
         }
@@ -114,8 +108,7 @@ namespace pdb {
                 const std::string_view cpattern,
                 const std::string_view ppattern) :
             pdb<node_t<T>>(mode, goal, cpattern, ppattern),
-            _nbexpansions              {                       0 },
-            _error                     { error_message::no_error }
+            _nbexpansions              {                       0 }
             { }
 
         // getters
@@ -124,9 +117,6 @@ namespace pdb {
         }
         const size_t get_nbexpansions () const {
             return _nbexpansions;
-        }
-        const error_message get_error () const {
-            return _error;
         }
 
         // methods
@@ -269,7 +259,7 @@ namespace pdb {
             // abstract state space
             pdboff_t pspace = pdb_t<node_t<T>>::address_space (pdb<node_t<T>>::_p_pattern);
             if (_nbexpansions != pspace) {
-                _error = error_message::address_space;
+                pdb<node_t<T>>::_error = error_message::address_space;
                 return false;
             }
 
@@ -278,7 +268,7 @@ namespace pdb {
 
                 // check this position has a value other than pdbzero
                 if (pdb<node_t<T>>::_pdb->at (address) == pdbzero) {
-                    _error = error_message::zero;
+                    pdb<node_t<T>>::_error = error_message::zero;
                     return false;
                 }
 
@@ -291,7 +281,7 @@ namespace pdb {
             // Before leaving, ensure there is only one location with a value
             // equal to 1
             if (nbones != 1) {
-                _error = error_message::nb_ones;
+                pdb<node_t<T>>::_error = error_message::nb_ones;
                 return false;
             }
 
@@ -353,6 +343,16 @@ namespace pdb {
                     return false;
                 }
 
+                // Before writting the values in the PDB to the file, decrement
+                // every value in one unit. The reason is that the PDB
+                // generation increments the g-value of the start state in one
+                // unit to distinguish empty locations from those with a g-value
+                // equal to zero (e.g., the abstract goal state), so that they
+                // have to be decremented now
+                for (auto i = 0 ; i < pdb<node_t<T>>::_pdb->size () ; i++) {
+                    (*pdb<node_t<T>>::_pdb) [i] = (*pdb<node_t<T>>::_pdb) [i]-1;
+                }
+
                 // Finally, write the PDB binary data into this file
                 if (!_write (out, pdb<node_t<T>>::_pdb->get_address ())) {
                     return false;
@@ -360,26 +360,6 @@ namespace pdb {
             }
 
             return true;
-        }
-
-        // return a string representing the current error
-        std::string get_error_message () const {
-            std::string output;
-            switch (_error) {
-                case error_message::no_error:
-                    output = "No error";
-                    break;
-                case error_message::address_space:
-                    output = "Address space";
-                    break;
-                case error_message::nb_ones:
-                    output = "Number of ones";
-                    break;
-                case error_message::zero:
-                    output = "Zero entries found";
-                    break;
-            }
-            return output;
         }
 
     }; // class outpdb<node_t<T>>

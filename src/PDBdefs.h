@@ -31,21 +31,53 @@ namespace pdb {
     //                   of the PDB which is computed with the static service
     //                   pdb_t::address_space
     //
-    //    nb_ones:
+    //    nb_ones: either zero or more than one entries have been found with the
+    //             value 1
     //
-    //    zero: entries found with the value zero. This error is considered
-    //          *only* when using MAX PDBs
+    //             output PDBs (outpdb): since the g-value of all locations is
+    //             incremented in one unit (to distinguish empty locations from
+    //             those with a g-value equal to zero), there can be only one
+    //             entry with a final value equal to one in MAX PDBs, the
+    //             abstract state space ---if doctor is used before write. This
+    //             error is ignored in the case of output ADD PDBs.
+    //
+    //             input PDBs (inpdb): this error is fully ignored in both MAX
+    //             and ADD input PDBs
+    //
+    //    zero: entries found with the value zero
     //
     //          output PDBs (outpdb): since the g-value of all locations is
     //          incremented in one unit (to distinguish empty locations from
     //          those with a g-value equal to zero), there can not be ever any
-    //          entry with a final value equal to zero.
+    //          entry with a final value equal to zero ---if doctor is used
+    //          before write
     //
-    //          input PDBs (inpdb): when reading PDBs, there can not be ever any
+    //          input PDBs (inpdb): when reading PDBs, there can be only one
     //          entry with a value equal to zero if it is a MAX PDB. In the case
     //          of ADD PDBs this error is ignored since there can be arbitrary
     //          number of entries with value zero.
-    enum class error_message {no_error, address_space, nb_ones, zero};
+    enum class error_message {
+        no_error,
+        address_space,
+        nb_ones,
+        zero
+    };
+
+    // Plausible errors while reading PDBs. Their meaning is self explanatory
+    enum class in_error_message{
+        no_error,
+        file_does_not_exist,
+        non_regular_file,
+        file_could_not_be_opened,
+        size_could_not_be_determined,
+        pdb_mode_could_not_be_read,
+        pdb_length_could_not_be_read,
+        pdb_goal_could_not_be_read,
+        pdb_ppattern_could_not_be_read,
+        pdb_cpattern_could_not_be_read,
+        pdb_incorrect_size,
+        pdb_g_values_could_not_be_read
+    };
 
     // indices to the pattern database are as long as size_t
     typedef unsigned long long int pdboff_t;

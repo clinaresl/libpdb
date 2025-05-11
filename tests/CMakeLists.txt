@@ -18,6 +18,7 @@ add_executable(gtest
   domains/TSTnpancake.cc
   structs/TSTpdb_t.cc
   algorithm/TSToutpdb.cc
+  algorithm/TSTinpdb.cc
 )
 
 target_link_libraries(gtest LINK_PUBLIC pdb GTest::gtest GTest::gtest_main)

@@ -54,14 +54,18 @@ namespace pdb {
         // They can be either generated traversing the abstract state space
         // (outpdb), or they can be loaded from a file (inpdb).
         std::vector<int> _goal;
-        std::string_view _c_pattern;
-        std::string_view _p_pattern;
+        std::string _c_pattern;
+        std::string _p_pattern;
 
         // the type of the PDB is stored in the following data member
         pdb_mode _mode;
 
         // As a result the PDB is stored internally
         pdb_t<node_t<T>> *_pdb;
+
+        // Which, when being either generated (outPDBs) or read (inPDBs) could
+        // have some errors
+        error_message _error;
 
     public:
 
@@ -74,11 +78,12 @@ namespace pdb {
              const std::vector<int>& goal,
              const std::string_view cpattern,
              const std::string_view ppattern) :
-            _goal         {     goal },
-            _c_pattern    { cpattern },
-            _p_pattern    { ppattern },
-            _mode         {     mode },
-            _pdb          {  nullptr }
+            _goal         {                   goal },
+            _c_pattern    {               cpattern },
+            _p_pattern    {               ppattern },
+            _mode         {                   mode },
+            _pdb          {                nullptr },
+            _error        { error_message::no_error}
             {}
 
         // provide a destructor to free the memory allocated to _pdb
@@ -90,14 +95,20 @@ namespace pdb {
         }
 
         // getters
+        const pdb_mode get_pdb_mode () const {
+            return _mode;
+        }
         const std::vector<int>& get_goal () const {
             return _goal;
         }
-        const std::string_view get_cpattern () const {
+        const std::string get_cpattern () const {
             return _c_pattern;
         }
-        const std::string_view get_ppattern () const {
+        const std::string get_ppattern () const {
             return _p_pattern;
+        }
+        const error_message get_error () const {
+            return _error;
         }
 
         // operator overloading
@@ -118,7 +129,35 @@ namespace pdb {
 
         // methods
 
-        // return the number of positions of this PDB
+        // return a string representing the current error
+        std::string get_error_message () const {
+            std::string output;
+            switch (_error) {
+                case error_message::no_error:
+                    output = "No error";
+                    break;
+                case error_message::address_space:
+                    output = "Address space";
+                    break;
+                case error_message::nb_ones:
+                    output = "Number of ones";
+                    break;
+                case error_message::zero:
+                    output = "Zero entries found";
+                    break;
+            }
+            return output;
+        }
+
+        // return the number of available positions in the PDB
+        size_t capacity () const {
+            return _pdb->capacity ();
+        }
+
+        // return the number of positions written in this PDB. Note that the
+        // value returned refers to the number of times that _pdb->insert was
+        // used because _pdb could also be written using operator[] but it does
+        // not update its _size
         pdboff_t size () const {
 
             // take into account that the _pdb might have not been generated

@@ -92,6 +92,66 @@ TEST_F (OutPDBFixture, NPancakeMaxGeneration) {
     }
 }
 
+// check that MAX PDBs can be randomly accesed and updated
+// ----------------------------------------------------------------------------
+TEST_F (OutPDBFixture, NPancakeMaxRandAccess) {
+
+    // Use pancakes of length between 4 and 8
+    for (auto length = 8 ; length <= 8 ; length++) {
+
+        // create a goal with length symbols explicitly given
+        auto goal = succListInt (length);
+
+        // test all possible patterns with at least 1 symbol and up to length-1
+        // symbols being preserved
+        for (auto nbsymbols = 1 ; nbsymbols <= length-1 ; nbsymbols++) {
+
+            // compute all patterns with length symbols, nbsymbols of them being
+            // preserved
+            auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+
+            // test every pattern separately
+            for (auto ipattern : patterns) {
+
+                // in the n-pancake both the ppattern and the cpattern are equal
+                pdb::outpdb<pdb::node_t<npancake_t>> pdb (pdb::pdb_mode::max, goal, ipattern, ipattern);
+
+                // and generate the pdb
+                pdb.generate ();
+
+                // and verify that the PDB has been correctly generated
+                if (!pdb.doctor ()) {
+                    cout << " Doctor: " << pdb.get_error_message () << endl; cout.flush ();
+                    cout << "         Address space: " << pdb.size () << endl; cout.flush ();
+                    cout << "         # expansions : " << pdb.get_nbexpansions () << endl; cout.flush ();
+                    cout << "         ipattern     : " << ipattern << endl; cout.flush ();
+                    ASSERT_TRUE (false);
+                }
+
+                // finally, check that the size of the PDB is equal to the size
+                // of the abstract state space being traversed
+                ASSERT_EQ (pdb.size (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
+
+                // selectively choose a number of locations of this PDB
+                for (auto idx = 0 ; idx < MAX_VALUES ; idx++) {
+
+                    // randomly choose a location and read its value
+                    auto loc = rand () % pdb.size ();
+                    pdb::pdbval_t val = pdb[loc];
+
+                    // update its value with a random value (which might be the
+                    // same than the previous one or not)
+                    pdb::pdbval_t newval = pdb::pdbval_t (rand ()%std::numeric_limits<pdb::pdbval_t>::max());
+                    pdb[loc] = newval;
+
+                    // and verify the new value has been correctly set
+                    ASSERT_EQ (newval, pdb[loc]);
+                }
+            }
+        }
+    }
+}
+
 // check that MAX PDBs are correctly generated in the N-Pancake domain
 // ----------------------------------------------------------------------------
 TEST_F (OutPDBFixture, NPancakeMaxWrite) {

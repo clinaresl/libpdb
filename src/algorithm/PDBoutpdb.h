@@ -22,8 +22,6 @@
 
 namespace pdb {
 
-    enum class error_message {no_error, address_space, nb_ones, zero};
-
     // Forward declaration
     template<typename PDBNodeT>
     class outpdb;
@@ -39,17 +37,19 @@ namespace pdb {
     private:
 
         // INVARIANT: outPDBs run a backwards breadth-first search from a _goal
-        // in the abstract state space abstracted with a given _p_pattern. To do
-        // this, they use a closed list implemented as another PDB which is
-        // initialized with its own _c_pattern. In case _p and _c_pattern are
-        // different, then every symbol masked (or abstracted) in _c_pattern
-        // must be abstracted as well in _p_pattern. In other words, the
-        // abstract space induced by _c_pattern must be a superset or equal to
-        // the abstract state space induced by _p_pattern.
+        // in the abstract state space abstracted with a given _c_pattern. To do
+        // this, they use a closed list which is the PDB itself. As a result,
+        // the minimum cost of every abstract state, according to a second
+        // pattern, _p_pattern, is stored in a final PDB.
         //
-        // The explicit definition of the goal and also the ppatern are given in
-        // the base class
-        std::string_view _c_pattern;
+        // In case _p and _c_pattern are different, then every symbol masked (or
+        // abstracted) in _c_pattern must be abstracted as well in _p_pattern.
+        // In other words, the abstract space induced by _c_pattern must be a
+        // superset or equal to the abstract state space induced by _p_pattern.
+        //
+        // Data members are available in the base class to register the explicit
+        // definition of the goal, and both patterns. It also records the final
+        // PDB generated.
 
         // outPDBs also gather some statistics
         std::chrono::duration<double, std::milli> _elapsed_time;
@@ -113,16 +113,12 @@ namespace pdb {
                 const std::vector<int>& goal,
                 const std::string_view cpattern,
                 const std::string_view ppattern) :
-            pdb<node_t<T>>(mode, goal, ppattern),
-            _c_pattern                 {                cpattern },
+            pdb<node_t<T>>(mode, goal, cpattern, ppattern),
             _nbexpansions              {                       0 },
             _error                     { error_message::no_error }
             { }
 
         // getters
-        const std::string_view get_cpattern () const {
-            return _c_pattern;
-        }
         const std::chrono::duration<double, std::milli> get_elapsed_time () const {
             return _elapsed_time;
         }
@@ -158,9 +154,9 @@ namespace pdb {
             pdb<node_t<T>>::_pdb = new (_pdb_raw) pdb_t<node_t<T>> (pspace);
             pdb<node_t<T>>::_pdb->init (pdb<node_t<T>>::_goal, pdb<node_t<T>>::_p_pattern);
 
-            pdboff_t cspace = pdb_t<node_t<T>>::address_space (_c_pattern);
+            pdboff_t cspace = pdb_t<node_t<T>>::address_space (pdb<node_t<T>>::_c_pattern);
             pdb_t<node_t<T>> cpdb (cspace);
-            cpdb.init (pdb<node_t<T>>::_goal, _c_pattern);
+            cpdb.init (pdb<node_t<T>>::_goal, pdb<node_t<T>>::_c_pattern);
 
             // next, abstract the goal state. The _c_pattern is used here, since
             // this is the pattern used during the search
@@ -245,7 +241,7 @@ namespace pdb {
             _elapsed_time = stop - start;
         }
 
-        // verify that data has been seemingly well written. Seemingly, because
+        // verify that data has been seemingly well created. Seemingly, because
         // there is no formal way to verify the contents of a PDB. It just
         // performs the folllowing operations:
         //
@@ -262,6 +258,8 @@ namespace pdb {
         // get_error_message can be used to get a string explaining the error
         // found. It reports only one error, if any, even if the PDB is
         // inconsistent in more than one regard.
+        //
+        // IMPORTANT: Use 'doctor' before 'write'
         bool doctor () {
 
             // count the number of locations with a value equal to 1
@@ -347,7 +345,7 @@ namespace pdb {
                 // 4. The cpattern (_c_pattern): used to determine the abstract
                 //    space to traverse to generate the PDB
                 std::vector<uint8_t> cpattern;
-                _sv_to_binary (_c_pattern, cpattern);
+                _sv_to_binary (pdb<node_t<T>>::_c_pattern, cpattern);
                 header.insert (header.end (), cpattern.begin (), cpattern.end ());
 
                 // and write the header

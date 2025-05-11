@@ -249,8 +249,15 @@ namespace pdb {
 
         // given a stable index, return the value stored at that location. In
         // case the index is incorrect, the behaviour is undefined
-        pdbval_t operator[] (const pdboff_t index) {
+        const pdbval_t& operator[] (const pdboff_t index) const {
             return _address[index];
+        }
+
+        // given a stable index, return a reference to its location, so that it
+        // can be re-written. In case the index is incorrect, an exception is
+        // raised
+        pdbval_t& operator[] (const pdboff_t index) {
+            return _address.at (index);
         }
 
         // given a stable index, return the value stored at that location. In

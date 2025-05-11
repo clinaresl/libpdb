@@ -20,6 +20,33 @@ namespace pdb {
 
     // Type definitions
     //
+    // Types of PDBs
+    enum class pdb_mode {max, add};
+
+    // Plausible errors during the generation (outpdb/inpdb) of PDBs
+    //
+    //    no_error: everything *seems* okay
+    //
+    //    address_space: the number of values differes from the theoretical size
+    //                   of the PDB which is computed with the static service
+    //                   pdb_t::address_space
+    //
+    //    nb_ones:
+    //
+    //    zero: entries found with the value zero. This error is considered
+    //          *only* when using MAX PDBs
+    //
+    //          output PDBs (outpdb): since the g-value of all locations is
+    //          incremented in one unit (to distinguish empty locations from
+    //          those with a g-value equal to zero), there can not be ever any
+    //          entry with a final value equal to zero.
+    //
+    //          input PDBs (inpdb): when reading PDBs, there can not be ever any
+    //          entry with a value equal to zero if it is a MAX PDB. In the case
+    //          of ADD PDBs this error is ignored since there can be arbitrary
+    //          number of entries with value zero.
+    enum class error_message {no_error, address_space, nb_ones, zero};
+
     // indices to the pattern database are as long as size_t
     typedef unsigned long long int pdboff_t;
 
@@ -45,9 +72,6 @@ namespace pdb {
 
     // Constants
     //
-    // Types of PDBs
-    enum class pdb_mode {max, add};
-
     // An entry equal to zero in the pattern database means unused entry. Because of
     // this, the g*-values of all entries in the PDB are incremented intentionally
     // in one unit and decreased only at the time they are written down to the file.

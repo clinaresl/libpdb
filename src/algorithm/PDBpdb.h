@@ -46,10 +46,15 @@ namespace pdb {
     protected:
 
         // INVARIANT: PDBs are defined given a pattern wrt the explicit
-        // definition of a goal. They can be either generated traversing the
-        // abstract state space (outpdb), or they can be loaded from a file
-        // (inpdb).
+        // definition of a goal, the _p_pattern. To compute the minimum cost of
+        // every abstract state according to the _p_pattern, a backwards
+        // breadth-first search is conducted which abstract states according to
+        // a second pattern, _c_pattern.
+        //
+        // They can be either generated traversing the abstract state space
+        // (outpdb), or they can be loaded from a file (inpdb).
         std::vector<int> _goal;
+        std::string_view _c_pattern;
         std::string_view _p_pattern;
 
         // the type of the PDB is stored in the following data member
@@ -66,9 +71,11 @@ namespace pdb {
         // Explicit constructor ---it is mandatory to provide the goal and the
         // pattern used for generating abstract states (p_pattern)
         pdb (pdb_mode mode,
-            const std::vector<int>& goal,
+             const std::vector<int>& goal,
+             const std::string_view cpattern,
              const std::string_view ppattern) :
             _goal         {     goal },
+            _c_pattern    { cpattern },
             _p_pattern    { ppattern },
             _mode         {     mode },
             _pdb          {  nullptr }
@@ -86,8 +93,27 @@ namespace pdb {
         const std::vector<int>& get_goal () const {
             return _goal;
         }
+        const std::string_view get_cpattern () const {
+            return _c_pattern;
+        }
         const std::string_view get_ppattern () const {
             return _p_pattern;
+        }
+
+        // operator overloading
+
+        // Given a correct index to the address space in this PDB, return the
+        // value at its location. In case the index is out of bounds, the
+        // behaviour is undefined
+        const pdbval_t& operator[] (const pdboff_t index) const {
+            return (*_pdb)[index];
+        }
+
+        // Given a correct index to the address space in this PDB, return a
+        // reference to its location so it can be overwritten. In case the index
+        // is out of bounds, an exception is raised.
+        pdbval_t& operator[] (const pdboff_t index) {
+            return (*_pdb)[index];
         }
 
         // methods

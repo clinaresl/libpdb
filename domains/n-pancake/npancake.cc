@@ -23,11 +23,9 @@
 #include <getopt.h>
 
 #include "../../src/pdb.h"
+#include "../helpers.h"
 
 #include "npancake_t.h"
-
-#define EXIT_OK 0
-#define EXIT_FAILURE 1
 
 using namespace std;
 
@@ -40,14 +38,12 @@ char *program_name;                       // The name the program was run with,
 
 static struct option const long_options[] =
 {
-    {"solver", required_argument, 0, 's'},
     {"file", required_argument, 0, 'f'},
+    {"goal", required_argument, 0, 'g'},
+    {"ppattern", required_argument, 0, 'p'},
+    {"cpattern", required_argument, 0, 'c'},
     {"variant", required_argument, 0, 'r'},
-    {"heuristic", required_argument, 0, 'x'},
-    {"k", required_argument, 0, 'k'},
-    {"csv", required_argument, 0, 'C'},
     {"no-doctor", no_argument, 0, 'D'},
-    {"summary", no_argument, 0, 'S'},
     {"verbose", no_argument, 0, 'v'},
     {"help", no_argument, 0, 'h'},
     {"version", no_argument, 0, 'V'},
@@ -55,22 +51,19 @@ static struct option const long_options[] =
 };
 
 static int decode_switches (int argc, char **argv,
-                            string& solver_name, string& filename, string& variant,
-                            string& heuristic, string& k_params, string& csvname, bool& no_doctor, bool& want_summary,
-                            bool& want_verbose);
+                            string& filename, string& goal, string& ppattern, string& cpattern, string& variant,
+                            bool& no_doctor, bool& want_verbose);
 static void usage (int status);
 
 // main entry point
 int main (int argc, char** argv) {
 
-    string solver_name;                            // user selection of solvers
     string filename;                            // file with all cases to solve
+    string sgoal;    // explicit representation of the goal in the range [1, N]
+    string ppattern;                  // pattern used to mask values in the PDB
+    string cpattern;       // pattern used to traverse the abstract state space
     string variant;                                    // variant of the domain
-    string heuristic;   // whether the consistent heuristic must be used or not
-    string k_params;                       // user selection of the values of k
-    string csvname;                          // name of the output csv filename
     bool no_doctor;                    // whether the doctor is disabled or not
-    bool want_summary;      // whether a summary of results is requested or not
     bool want_verbose;                  // whether verbose output was requested
     chrono::time_point<chrono::system_clock> tstart, tend;          // CPU time
 
@@ -78,175 +71,203 @@ int main (int argc, char** argv) {
     program_name = argv[0];
     vector<string> variant_choices = {"unit", "heavy-cost"};
 
-    // arg parse
-    decode_switches (argc, argv, solver_name, filename, variant, heuristic, k_params, csvname, no_doctor, want_summary, want_verbose);
+    // arg parse ---and trim strings
+    decode_switches (argc, argv, filename, sgoal, ppattern, cpattern, variant, no_doctor, want_verbose);
+    sgoal = trim (sgoal);
+    ppattern = trim (ppattern);
+    cpattern = trim (cpattern);
 
     // parameter checking
 
     // --file
     if (filename == "") {
-        cerr << "\n Please, provide a file with the information of all start states to solve" << endl;
-        cerr << " wrt the identity permutation" << endl;
+        cerr << "\n Please, provide a filename to store the contents of the PDB" << endl;
         cerr << " See " << program_name << " --help for more details" << endl << endl;
         exit(EXIT_FAILURE);
     }
 
-    // if (!get_choice (variant, variant_choices)) {
-    //     cerr << "\n Please, provide a correct name for the variant with --variant" << endl;
-    //     cerr << " See " << program_name << " --help for more details" << endl << endl;
-    //     exit(EXIT_FAILURE);
-    // }
+    // --goal
+    if (sgoal == "") {
+        cerr << "\n Please, provide a explicit representation of the goal state" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // /* do the work */
+    // check the goal state consists of a blank separated list of distinct
+    // digits
+    auto cgoal = string_to_int (sgoal);
+    sort (cgoal.begin (), cgoal.end ());
+    if (adjacent_find (cgoal.begin (), cgoal.end ()) != cgoal.end ()) {
+        cerr << "\n The goal has to be given as a blank separated list of *distinct* digits" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // /* !------------------------- INITIALIZATION --------------------------! */
+    // check also it starts with 1 and, in passing, get the length of the
+    // permutations
+    if (cgoal[0] != 1) {
+        cerr << "\n The goal definition must be given in the range [1, N]." << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
+    int length = cgoal.size ();
 
-    // // process the solver names and heuristics selection to get a vector with
-    // // the signatures of the combinations of solvers and heuristics to execute
-    // vector<string> solvers = split_option (solver_name, ack_solvers);
-    // vector<string> heuristics = split_option (heuristic, ack_heuristics);
+    // --ppattern
+    if (ppattern == "") {
+        cerr << "\n Please, provide a pattern to generate the PDB" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // // and also process the user selection of the K values
-    // auto kspec = split_ks (k_params);
+    // check the p-pattern has been defined using only - and *
+    if (!in (ppattern, "-*")) {
+        cerr << "\n The p-pattern can contain only characters '-' and '*'" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // // open the given file and retrieve all cases from it
-    // vector<string> names;
-    // vector<vector<string>> instances;
-    // get_problems (filename, names, instances);
-    // if (!instances.size ()) {
-    //     cerr << endl;
-    //     cerr << " Error: The file '" << filename << "' contains no instances to solve!" << endl;
-    //     cerr << endl;
-    //     exit (EXIT_FAILURE);
-    // }
+    // check the length of the p-pattern equals the size of the goal
+    if (ppattern.size () != cgoal.size ()) {
+        cerr << "\n Both the p-pattern and the goal must have the same length" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // // create the goal state which is represented as the identity permutation
-    // // using the symbols in the range [1, N]. All instances are assumed to have
-    // // the same length, so use the length of any as the length of the N-Pancake
-    // // to solve next
-    // vector<int> permutation;
-    // for (auto i = 0 ; i < instances[0].size () ; permutation.push_back (++i));
-    // npancake_t goal (permutation);
+    // --cpattern
+    if (cpattern == "") {
+        cerr << "\n Please, provide a pattern to traverse the abstract state space" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // // and now create a vector of tasks to solve
-    // vector<instance_t<npancake_t>> tasks;
-    // for (auto i = 0 ; i < instances.size () ; i++) {
-    //     vector<int> permutation;
-    //     for (auto& disc: instances[i]) {
-    //         permutation.push_back (stoi (disc));
-    //     }
-    //     tasks.push_back (instance_t<npancake_t> {names[i], permutation, goal});
-    // }
+    // check the c-pattern has been defined using only - and *
+    if (!in (cpattern, "-*")) {
+        cerr << "\n The c-pattern can contain only characters '-' and '*'" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // /* !-------------------------------------------------------------------! */
+    // check the length of the c-pattern equals the size of the goal
+    if (cpattern.size () != cgoal.size ()) {
+        cerr << "\n Both the c-pattern and the goal must have the same length" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // cout << endl;
-    // cout << " solver       : " << solver_name << " " << git_describe () << endl;
-    // cout << " file         : " << filename << " (" << instances.size () << " instances)" << endl;
-    // cout << " variant      : " << variant << " (" << heuristic << ")" << endl;
-    // cout << " size         : " << npancake_t::get_n () << endl;
-    // cout << " K            : ";
-    // for (auto& ispec: kspec) {
-    //     cout << "[" << get<0>(ispec) << ", " << get<1>(ispec) << ", " << get<2> (ispec) << "] ";
-    // }
-    // cout << endl;
+    // --variant
+    if (!get_choice (variant, variant_choices)) {
+        cerr << "\n Please, provide a correct name for the variant with --variant" << endl;
+        cerr << " See " << program_name << " --help for more details" << endl << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // /* !----------------------------- SEARCH ------------------------------! */
+    /* do the work */
 
-    // // start the clock
-    // tstart = chrono::system_clock::now ();
+    /* !------------------------- INITIALIZATION --------------------------! */
 
-    // // create an instance of the "generic" domain-dependent solver
-    // solver<npancake_t> manager (get_domain (), variant,
-    //                             tasks, k_params);
+    cout << endl;
+    vector<int> goal = string_to_int (sgoal);
+    cout << " file     : " << filename << endl;
+    cout << " PDB mode : " << "MAX" << endl;
+    cout << " goal     : "; print (goal); cout << endl;
+    cout << " p-pattern: " << ppattern << endl;
+    cout << " c-pattern: " << cpattern << endl;
+    cout << " variant  : " << variant << endl;
+    cout << " -------------------------------------------------------------" << endl << endl;
 
-    // // solve all the instances with every combination of solver and heuristic
-    // // selected by the user and in the same order given
-    // for (auto isolver : solvers) {
-    //     for (auto iheuristic: heuristics) {
+    /* !------------------------- PDB GENERATION --------------------------! */
 
-    //         // initialize the incremental table with the updates of the gap
-    //         // heuristic under the selected variant and heuristic function
-    //         npancake_t::init (variant, iheuristic=="consistent");
+    // create an output PDB and generate it
+    tstart = chrono::system_clock::now ();
+    pdb::outpdb<pdb::node_t<npancake_t>> outpdb (pdb::pdb_mode::max, goal, cpattern, ppattern);
+    outpdb.generate ();
 
-    //         manager.run (isolver, iheuristic, no_doctor, want_summary, want_verbose);
-    //     }
-    // }
+    // check whether the PDB has been correctly generated
+    if (!no_doctor) {
+        if (!outpdb.doctor ()) {
+            cerr << " Doctor: " << outpdb.get_error_message () << endl;
+            cerr << "         Address space: " << outpdb.size () << endl;
+            cerr << "         # expansions : " << outpdb.get_nbexpansions () << endl;
+            cerr << "         ppattern     : " << ppattern << endl;
+            cerr << "         cpattern     : " << cpattern << endl;
+            return (EXIT_FAILURE);
+        }
+    }
+    tend = chrono::system_clock::now ();
 
-    // // and stop the clock
-    // tend = chrono::system_clock::now ();
+    // If so, write it to the file
+    if (!outpdb.write (filename)) {
+        cerr << " Fatal Error: it was not possible to write the PDB to the given filename" << endl;
+    }
 
-    // // to conclude, show an error summary and store all the results in a csv
-    // // file in case any was given
-    // manager.show_error_summary (no_doctor);
-    // manager.write_csv (csvname);
-    // cout << " 🕒 CPU time: " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() << " seconds" << endl;
-    // cout << endl;
+    // show a summary of information
+    cout << " Doctor       : ";
+    if (!no_doctor) {
+        cout << "Ok!";
+    } else {
+        cout << "Unverified";
+    }
+    cout << endl;
+    cout << " Length       : " << length << endl;
+    cout << " Address space: " << pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ppattern) << endl;
+    cout << " 🕒 CPU time  : " << endl;
+    cout << "    💻 Generation: " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(outpdb.get_elapsed_time ()).count() << " seconds" << endl;
+    cout << "       Total     : " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() << " seconds" << endl;
 
-    // /* !-------------------------------------------------------------------! */
+    /* !-------------------------------------------------------------------! */
 
     // Well done! Keep up the good job!
-    return (EXIT_OK);
+    cout << endl;
+    return (EXIT_SUCCESS);
 }
 
 // Set all the option flags according to the switches specified. Return the
 // index of the first non-option argument
 static int
 decode_switches (int argc, char **argv,
-                 string& solver_name, string& filename, string& variant,
-                 string& heuristic, string& k_params, string& csvname, bool& no_doctor, bool& want_summary,
-                 bool& want_verbose) {
+                 string& filename, string& goal, string& ppattern, string& cpattern, string& variant,
+                 bool& no_doctor, bool& want_verbose) {
 
     int c;
 
     // Default values
-    solver_name = "";
     filename = "";
+    goal = "";
+    ppattern = "";
+    cpattern = "";
     variant = "unit";
-    heuristic = "consistent";
-    k_params = "";
-    csvname = "";
     no_doctor = false;
-    want_summary = false;
     want_verbose = false;
 
     while ((c = getopt_long (argc, argv,
-                             "s"  /* solver */
                              "f"  /* file */
+                             "g"  /* goal */
+                             "p"  /* ppattern */
+                             "c"  /* cpattern */
                              "r"  /* variant */
-                             "x"  /* heuristic */
-                             "k"  /* k */
-                             "C"  /* csv */
                              "D"  /* no-doctor */
-                             "S"  /* summary */
                              "v"  /* verbose */
                              "h"  /* help */
                              "V", /* version */
                              long_options, (int *) 0)) != EOF) {
         switch (c) {
-        case 's':  /* --solver */
-            solver_name = optarg;
-            break;
         case 'f':  /* --file */
             filename = optarg;
+            break;
+        case 'g':  /* --goal */
+            goal = optarg;
+            break;
+        case 'p':  /* --ppattern */
+            ppattern = optarg;
+            break;
+        case 'c':  /* --cpattern */
+            cpattern = optarg;
             break;
         case 'r': /* --variant */
             variant = optarg;
             break;
-        case 'x': /* --heuristic */
-            heuristic = optarg;
-            break;
-        case 'k':  /* --k */
-            k_params = optarg;
-            break;
-        case 'C':  /* --csv */
-            csvname = optarg;
-            break;
         case 'D':  /* --no-doctor */
             no_doctor = true;
-            break;
-        case 'S':  /* --summary */
-            want_summary = true;
             break;
         case 'v':  /* --verbose */
             want_verbose = true;
@@ -254,9 +275,9 @@ decode_switches (int argc, char **argv,
         case 'V':
             cout << " pdb (n-pancake) " << CMAKE_VERSION << endl;
             cout << " " << CMAKE_BUILD_TYPE << " Build Type" << endl << endl;
-            exit (EXIT_OK);
+            exit (EXIT_SUCCESS);
         case 'h':
-            usage (EXIT_OK);
+            usage (EXIT_SUCCESS);
         default:
             cout << endl << " Unknown argument!" << endl;
             usage (EXIT_FAILURE);
@@ -269,51 +290,23 @@ decode_switches (int argc, char **argv,
 static void
 usage (int status)
 {
-    cout << endl << " " << program_name << " implements various K shortest-path search algorithms in the N-Pancake using the GAP heuristic" << endl << endl;
+    cout << endl << " " << program_name << " tool used to generate PDBs for the N-Pancake puzzle" << endl << endl;
     cout << " Usage: " << program_name << " [OPTIONS]" << endl << endl;
     cout << "\
  Mandatory arguments:\n\
-      -s, --solver [STRING]+     K shortest-path algorithms to use. Choices are:\n\
-                                    + Brute-force search algorithms:\n\
-                                       > 'mDijkstra': brute-force variant of mA*\n\
-                                       > 'K0': brute-force variant of K*\n\
-                                       > 'belA0': brute-force variant of belA*\n\
-                                    + Heuristic search algorithms:\n\
-                                       > 'mA*': mA*\n\
-                                       > 'K*': K*\n\
-                                       > 'belA*': BELA*\n\
-                                 It is possible to provide as many as desired in a blank separated list between double quotes,\n\
-                                 e.g., \"mDijkstra belA0\"\n\
-      -f, --file [STRING]        filename with a line for each instance to solve wrt to the identity permutation.\n\
-                                 Each line consists of a problem id and the permutation to solve given as a list of numbers\n\
-                                 separated by spaces in the range [1, N]\n\
-      -r, --variant [STRING]     Variant of the n-Pancake to consider. Choices are {unit, heavy-cost}. By default, unit is used\n\
-      -x, --heuristic [STRING]   Whether a heuristic search algorith must use a consistent or innconsistent heuristic functtion\n\
-                                 The available values under each variant are given next:\n\
-                                    + Unit variant:\n\
-                                       > consistent: gap heuristic\n\
-                                       > inconsistent: max of the gap of the permutation and the gap of the inverse\n\
-                                    + Heavy cost:\n\
-                                       > consistent: gap heuristic where each gap is weighted by the minimum radius of the discs\n\
-                                                     involved in the gap\n\
-                                       > inconsistent: max of the weighted gap heuristic of the permutation and its inverse\n\
-                                 Note that the 'inconsistent' heuristic in the unit variant is not really inconsistent because \n\
-                                 the inverse permutation preserves the gaps of the original permutation\n\
-      -k, --k [NUMBER]+          Definition of the different values of K to test.\n\
-                                 The entire specification consists of a semicolon separated list of single specifications\n\
-                                 e.g., '1 5; 10 90 10; 100'\n\
-                                 Every single specification consists of a blank separated list with up to three integers indicating\n\
-                                 the first value of K, the last one and the increment between successive values of K.\n\
-                                 If only one value is given (e.g., '100'), only one value of K is used; if only two are given\n\
-                                 (e.g., '1 5'), all values of K between them are used with an increment equal to 1\n\
+      -f, --file     [STRING]     pattern database filename\n\
+      -g, --goal     [STRING]     explicit representation of the goal state with a blank separated list of digits\n\
+                                  in the range [1, N].\n\
+      -p, --ppattern [STRING]     specify the pattern mask to use to generate the PDB. The pattern consist only of characters\n\
+                                  '*' and '-', where the first indicates that the i-th symbol in the goal is abstracted, \n\
+                                  whereas the latter indicates that the symbols is preserved\n\
+      -c, --cpattern [STRING]     specify the pattern mask to use to traverse the abstract space. It is defined like --pattern\n\
+                                  and must be either a superset or equal to the ppattern.\n\
+      -r, --variant  [STRING]     Variant of the n-Pancake to consider. Choices are {unit, heavy-cost}. By default, unit is used\n\
 \n\
  Optional arguments:\n\
-      -C, --csv [STRING]         name of the csv output files for storing results. If none is given, no file is generated\n\
-      -D, --no-doctor            If given, the automated error checking is disabled. Otherwise, all solutions are automatically\n\
-                                 checked for correctness\n\
-      -S, --summary              If given, only the results of the last solution path found for every instance are shown. Otherwise,\n\
-                                 the results of every single solution path are shown in the output csv file. It has no effect if\n\
-                                 --csv is not given\n\
+      -D, --no-doctor            If given, the automated error checking is disabled. Otherwise, the PDB is verified for\n\
+                                 correctness\n\
  Misc arguments:\n\
       --verbose                  print more information\n\
       -h, --help                 display this help and exit\n\

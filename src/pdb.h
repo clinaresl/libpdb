@@ -19,6 +19,7 @@
 #define CMAKE_VERSION "1.0"
 
 // *** data structures
+
 #include "structs/PDBnode_t.h"
 #include "structs/PDBopen_t.h"
 #include "structs/PDBpdb_t.h"

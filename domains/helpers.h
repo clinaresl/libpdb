@@ -45,7 +45,7 @@ static inline std::string& trim (std::string& s) {
 // given a vector of any type show its contents on the standard output separated
 // by a blank
 template<typename T>
-void print (std::vector<T>& v) {
+void print (const std::vector<T>& v) {
     for (const auto& item: v) {
         std::cout << item << " ";
     }
@@ -64,9 +64,13 @@ const std::string tolower (std::string& input);
 // Two characters are the same even if they are shown in different case.
 bool get_choice (std::string& choice, const std::vector<std::string>& choices);
 
-// given a string in a blank separated list of ints, return a vector of ints
+// given a string with a blank separated list of ints, return a vector of ints
 // with its contents
 std::vector<int> string_to_int (const std::string& params);
+
+// given a string with a blank separated list of strings, return a vector of
+// strings with its contents
+std::vector<std::string> string_to_string (const std::string& params);
 
 // return true if the first string contains only characters given in the second
 // string

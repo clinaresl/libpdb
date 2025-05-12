@@ -38,6 +38,9 @@ namespace pdb {
         // recorded separately
         std::filesystem::path _path;
 
+        // and read as many values as the size of the abstract state
+        pdboff_t _address_space;
+
         // type of error generated while reading the PDB from the filesystem
         in_error_message _in_error;
 
@@ -50,8 +53,9 @@ namespace pdb {
         // the PDB has to be provided
         inpdb (const std::filesystem::path path) :
             pdb<node_t<T>>(pdb_mode::max, std::vector<int>(), "", ""),
-            _path     {                      path },
-            _in_error { in_error_message::no_error}
+            _path          {                      path },
+            _address_space {                         0 },
+            _in_error      { in_error_message::no_error}
             {}
 
         // getters
@@ -60,11 +64,35 @@ namespace pdb {
         }
 
         // getters
+        pdboff_t get_address_space () const {
+            return _address_space;
+        }
         const in_error_message get_in_error () const {
             return _in_error;
         }
 
+        // operator overloading
+
+        // get the value corresponding to the given permutation as a vector of
+        // integers. Call this operator only after using 'read'. Otherwise, the
+        // results are undefined
+        pdbval_t operator[] (const std::vector<int>& perm) const {
+
+            // first, rank the given permutation with the pattern found in this
+            // PDB
+            pdboff_t index = pdb<node_t<T>>::_pdb->rank (perm);
+
+            // and return the value at that location
+            return (*pdb<node_t<T>>::_pdb)[index];
+        }
+
         // methods
+
+        // return the size of the abstract state of this PDB. Call this method
+        // only after using 'read'. Otherwise, the rsults are undefined.
+        pdboff_t address_space () const {
+            return _address_space;
+        }
 
         // retrieve the contents from the filename found in the path used for
         // constructing this instance and return the size of its abstract space
@@ -171,6 +199,9 @@ namespace pdb {
             for (pdboff_t i = 0 ; i < pspace ; i++) {
                 (*pdb<node_t<T>>::_pdb)[i]=gvals[i];
             }
+
+            // set the size of the abstract state of this PDB
+            _address_space = pspace;
 
             // and return the number of abstract states found in the PDB
             return pspace;

@@ -68,7 +68,7 @@ bool get_choice (string& choice, const vector<string>& choices) {
     return false;
 }
 
-// given a string in a blank separated list of ints, return a vector of ints
+// given a string with a blank separated list of ints, return a vector of ints
 // with its contents
 std::vector<int> string_to_int (const std::string& params) {
 
@@ -89,6 +89,27 @@ std::vector<int> string_to_int (const std::string& params) {
         } catch (const char *msg) {
             throw invalid_argument (" error while processing a content: " + string (msg));
         }
+    }
+
+    // return the vector with all digits found in the input string
+    return result;
+}
+
+// given a string with a blank separated list of strings, return a vector of
+// strings with its contents
+std::vector<std::string> string_to_string (const std::string& params) {
+
+    std::vector<string> result;
+
+    regex regex("\\s+");
+    sregex_token_iterator it(params.begin(), params.end(), regex, -1);
+    sregex_token_iterator end;
+
+    // and now process each integer separately
+    for (; it != end; ++it) {
+
+        // add this string to the vector
+        result.push_back (string (*it));
     }
 
     // return the vector with all digits found in the input string

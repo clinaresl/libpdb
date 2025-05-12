@@ -105,7 +105,7 @@ int main (int argc, char** argv) {
 
     // check also it starts with 1 and, in passing, get the length of the
     // permutations
-    if (cgoal[0] != 1) {
+    if (cgoal[0] != 1 || cgoal[cgoal.size ()-1]!= cgoal.size ()) {
         cerr << "\n The goal definition must be given in the range [1, N]." << endl;
         cerr << " See " << program_name << " --help for more details" << endl << endl;
         exit(EXIT_FAILURE);

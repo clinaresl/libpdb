@@ -71,28 +71,6 @@ namespace pdb {
             return _in_error;
         }
 
-        // operator overloading
-
-        // Given a correct index to the address space in this PDB, return the
-        // value at its location. In case the index is out of bounds, the
-        // behaviour is undefined
-        const pdbval_t& operator[] (const pdboff_t index) const {
-            return (*pdb<node_t<T>>::_pdb)[index];
-        }
-
-        // get the value corresponding to the given permutation as a vector of
-        // integers. Call this operator only after using 'read'. Otherwise, the
-        // results are undefined
-        pdbval_t operator[] (const std::vector<int>& perm) const {
-
-            // first, rank the given permutation with the pattern found in this
-            // PDB
-            pdboff_t index = pdb<node_t<T>>::_pdb->rank (perm);
-
-            // and return the value at that location
-            return (*pdb<node_t<T>>::_pdb)[index];
-        }
-
         // methods
 
         // return the size of the abstract state of this PDB. Call this method

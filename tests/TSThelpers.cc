@@ -208,6 +208,38 @@ vector<string> generatePatterns(int n, int m) {
     return result;
 }
 
+// given a pattern defined wrt to a goal state, return the partial permutation
+// that results after applying the pattern to it
+vector<int> mask (const vector<int>& perm,
+                  const vector<int>& goal, const string pattern) {
+
+    // Intentionally, this operation is performed in a way which is
+    // different than the algorithm implemented in pdb_t
+    vector<int> result;
+
+    // compute the inverse of the goal --which most likely will be itself,
+    // because the identity is commonly used
+    auto maxi = max_element (goal.begin (), goal.end ());
+    vector<int> q = vector<int>(1 + *maxi);
+    for (auto i = 0 ; i < int (goal.size ()) ; i++) {
+        q[goal[i]] = i;
+    }
+
+    // and now process the permutation applying the given pattern
+    for (auto i = 0 ; i < int (perm.size ()) ; i++) {
+
+        // in case this symbol is being preserved in the goal state
+        if (pattern[q[perm[i]]] == '-') {
+            result.push_back (perm[i]);
+        } else {
+            result.push_back (pdb::NONPAT);
+        }
+    }
+
+    return result;
+}
+
+
 // Local Variables:
 // mode:cpp
 // fill-column:80

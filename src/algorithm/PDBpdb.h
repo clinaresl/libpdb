@@ -120,6 +120,18 @@ namespace pdb {
             return (*_pdb)[index];
         }
 
+        // get the value corresponding to the given permutation as a vector of
+        // integers. The permutation is ranked according to the pattern given to
+        // _pdb. Make sure to invoke this service on outpdbs only after invoking
+        // 'generate' and with inpdbs only after using 'read'
+        const pdbval_t operator[] (const std::vector<int>& perm) const {
+
+            // rank the permutation with the p-pattern stored in this instance,
+            // and return the value at that position
+            return _pdb->at (_pdb->rank (perm));
+        }
+
+
         // Given a correct index to the address space in this PDB, return a
         // reference to its location so it can be overwritten. In case the index
         // is out of bounds, an exception is raised.

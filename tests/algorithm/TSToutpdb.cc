@@ -92,6 +92,79 @@ TEST_F (OutPDBFixture, NPancakeMaxGeneration) {
     }
 }
 
+// Verify that data is *seemingly* well computed, i.e., that a PDB preserving
+// all symbols produces g-value which are either larger or equal than other PDBs
+// which abstract a positive number of symbols.
+TEST_F (OutPDBFixture, NPancakeDominance) {
+
+    // Use pancakes of length 8
+    auto length = 8;
+
+    // create a goal with length symbols explicitly given
+    auto goal = succListInt (length);
+
+    // first generate a PDB which preserves all symbols
+    string full_pattern (length, '-');
+    pdb::outpdb<pdb::node_t<npancake_t>> full_pdb (pdb::pdb_mode::max, goal, full_pattern, full_pattern);
+    full_pdb.generate ();
+    // and verify that the PDB has been correctly generated
+    if (!full_pdb.doctor ()) {
+        cout << " Doctor: " << full_pdb.get_error_message () << endl; cout.flush ();
+        cout << "         Address space: " << full_pdb.size () << endl; cout.flush ();
+        cout << "         # expansions : " << full_pdb.get_nbexpansions () << endl; cout.flush ();
+        cout << "         ipattern     : " << full_pattern << endl; cout.flush ();
+        ASSERT_TRUE (false);
+    }
+
+    // Next generate all the different PDBs that result from abstracting a
+    // strictly positive number of symbols. 'nbsymbols' is the number of symbols
+    // being preserved
+    for (auto nbsymbols = 1 ; nbsymbols <= length-1 ; nbsymbols++) {
+
+        // compute all patterns with length symbols, nbsymbols of them being
+        // preserved
+        auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+
+        // test every pattern separately
+        for (auto ipattern : patterns) {
+
+            // in the n-pancake both the ppattern and the cpattern are equal
+            pdb::outpdb<pdb::node_t<npancake_t>> pdb (pdb::pdb_mode::max, goal, ipattern, ipattern);
+
+            // and generate the pdb
+            pdb.generate ();
+
+            // and verify that the PDB has been correctly generated
+            if (!pdb.doctor ()) {
+                cout << " Doctor: " << pdb.get_error_message () << endl; cout.flush ();
+                cout << "         Address space: " << pdb.size () << endl; cout.flush ();
+                cout << "         # expansions : " << pdb.get_nbexpansions () << endl; cout.flush ();
+                cout << "         ipattern     : " << ipattern << endl; cout.flush ();
+                ASSERT_TRUE (false);
+            }
+
+            // in passing, check that the size of the PDB is equal to the size
+            // of the abstract state space being traversed
+            ASSERT_EQ (pdb.size (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
+
+            // next, try all permutations with the given length
+            vector<vector<int>> perms = generatePermutations (length);
+            for (const auto& iperm: perms) {
+
+                // mask this permutation according to the i-th pattern
+                vector<int> mperm = mask (iperm, goal, ipattern);
+
+                // and now verify that the value returned in the full PDB is
+                // larger or equal than the value computed in the more
+                // restricted PDB
+                ASSERT_GE (full_pdb[iperm], pdb[mperm]);
+            }
+        }
+    }
+}
+
+
+
 // check that MAX PDBs can be randomly accesed and updated
 // ----------------------------------------------------------------------------
 TEST_F (OutPDBFixture, NPancakeMaxRandAccess) {

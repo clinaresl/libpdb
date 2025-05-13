@@ -119,16 +119,16 @@ protected:
         // compute the inverse of each permutation
         auto maxi = std::max_element (p1.begin (), p1.end ());
         std::vector<int> q1 (1 + *maxi);
-        for (auto i = 0 ; i < p1.size () ; i++) {
+        for (auto i = 0 ; i < int (p1.size ()) ; i++) {
             q1[p1[i]] = i;
         }
         std::vector<int> q2 (1 + *maxi);
-        for (auto i = 0 ; i < p2.size () ; i++) {
+        for (auto i = 0 ; i < int (p2.size ()) ; i++) {
             q2[p2[i]] = i;
         }
 
         // now, verify whether both permutations are indeed equal or not
-        for (auto i = 0 ; i < pattern.size () ; i++) {
+        for (auto i = 0 ; i < int (pattern.size ()) ; i++) {
 
             if (pattern[i]=='-') {
 
@@ -145,37 +145,6 @@ protected:
         // at this point, they both have been proved to be the same abstract
         // state
         return true;
-    }
-
-    // given a pattern defined wrt to a goal state, return the partial
-    // permutation that results after applying the pattern to it
-    std::vector<int> mask (const std::vector<int>& perm,
-                           const std::vector<int>& goal, const std::string pattern) {
-
-        // Intentionally, this operation is performed in a way which is
-        // different than the algorithm implemented in pdb_t
-        std::vector<int> result;
-
-        // compute the inverse of the goal --which most likely will be itself,
-        // because the identity is commonly used
-        auto maxi = std::max_element (goal.begin (), goal.end ());
-        std::vector<int> q = std::vector<int>(1 + *maxi);
-        for (auto i = 0 ; i < int (goal.size ()) ; i++) {
-            q[goal[i]] = i;
-        }
-
-        // and now process the permutation applying the given pattern
-        for (auto i = 0 ; i < int (perm.size ()) ; i++) {
-
-            // in case this symbol is being preserved in the goal state
-            if (pattern[q[perm[i]]] == '-') {
-                result.push_back (perm[i]);
-            } else {
-                result.push_back (pdb::NONPAT);
-            }
-        }
-
-        return result;
     }
 };
 

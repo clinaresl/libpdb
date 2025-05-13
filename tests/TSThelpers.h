@@ -21,6 +21,15 @@
 #include "../src/structs/PDBnode_t.h"
 #include "../domains/n-pancake/npancake_t.h"
 
+// given a vector of any type show its contents on the standard output separated
+// by a blank
+template<typename T>
+void print (const std::vector<T>& v) {
+    for (const auto& item: v) {
+        std::cout << item << " ";
+    }
+}
+
 // definition of a struct used to generate a list of numbers of the desired
 // length. succ () returns the next integer index, starting from 1
 struct index_t {
@@ -62,6 +71,11 @@ std::vector<std::vector<int>> generatePermutations(int n);
 // return a vector of vectors of strings with all patterns that contain n
 // symbols '-' and m symbols '*'
 std::vector<std::string> generatePatterns(int n, int m);
+
+// given a pattern defined wrt to a goal state, return the partial permutation
+// that results after applying the pattern to it
+std::vector<int> mask (const std::vector<int>& perm,
+                       const std::vector<int>& goal, const std::string pattern);
 
 #endif // _TSTHELPERS_H_
 

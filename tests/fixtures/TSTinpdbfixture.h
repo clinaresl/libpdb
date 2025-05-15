@@ -61,6 +61,28 @@ protected:
         return pathdir /  filename.str ();
     }
 
+    // given a pattern defined with respect to a goal, get the default cost
+    // defined as the minimum value among the symbols being abstracted.
+    // Obviously, if all symbols are abstracted, then the minimum integer
+    // defined in the goal is returned as the default cost
+    pdb::pdbval_t get_default_cost_npancake (const std::vector<int>& goal, const std::string pattern) {
+
+        // Even if by default the goal is defined as the identity permutation,
+        // compute the default cost without making this assumption. It is
+        // assumed however, that both the goal and the pattern are not empty
+        pdb::pdbval_t cost = std::numeric_limits<pdb::pdbval_t>::max();
+        for (auto i = 0 ; i < int (goal.size ()) ; i++) {
+
+            // Update the default cost if this symbol is abstracted and its
+            // value is less than the incumbent value
+            cost = (pattern[i] == '*' && goal[i] < cost) ? goal[i] : cost;
+        }
+
+        // in case that a true default cost has been computed, return it;
+        // otherwise, return the value of the lowest symbol in the goal even if
+        // it has been abstracted
+        return cost;
+    }
 };
 
 #endif // _TSTINPDBFIXTURE_H_

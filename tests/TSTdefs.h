@@ -13,6 +13,7 @@
 #ifndef _TSTDEFS_H_
 #define _TSTDEFS_H_
 
+#include <algorithm>
 #include <limits>
 
 // predefined number of executions of each unit test

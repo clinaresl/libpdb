@@ -137,23 +137,25 @@ int main (int argc, char** argv) {
 
     // --cpattern
     if (cpattern == "") {
-        cerr << "\n Please, provide a pattern to traverse the abstract state space" << endl;
-        cerr << " See " << program_name << " --help for more details" << endl << endl;
-        exit(EXIT_FAILURE);
-    }
 
-    // check the c-pattern has been defined using only - and *
-    if (!in (cpattern, "-*")) {
-        cerr << "\n The c-pattern can contain only characters '-' and '*'" << endl;
-        cerr << " See " << program_name << " --help for more details" << endl << endl;
-        exit(EXIT_FAILURE);
-    }
+        // If no cpattern has been given, then copy the ppattern
+        cpattern = ppattern;
+    } else {
 
-    // check the length of the c-pattern equals the size of the goal
-    if (cpattern.size () != cgoal.size ()) {
-        cerr << "\n Both the c-pattern and the goal must have the same length" << endl;
-        cerr << " See " << program_name << " --help for more details" << endl << endl;
-        exit(EXIT_FAILURE);
+        // However, if a cpattern has been given, then check first it has been
+        // defined using only - and *
+        if (!in (cpattern, "-*")) {
+            cerr << "\n The c-pattern can contain only characters '-' and '*'" << endl;
+            cerr << " See " << program_name << " --help for more details" << endl << endl;
+            exit(EXIT_FAILURE);
+        }
+
+        // check the length of the c-pattern equals the size of the goal
+        if (cpattern.size () != cgoal.size ()) {
+            cerr << "\n Both the c-pattern and the goal must have the same length" << endl;
+            cerr << " See " << program_name << " --help for more details" << endl << endl;
+            exit(EXIT_FAILURE);
+        }
     }
 
     // --variant
@@ -333,17 +335,17 @@ usage (int status)
     cout << " Usage: " << program_name << " [OPTIONS]" << endl << endl;
     cout << "\
  Mandatory arguments:\n\
-      -f, --file     [STRING]     pattern database filename\n\
-      -g, --goal     [STRING]     explicit representation of the goal state with a blank separated list of digits\n\
-                                  in the range [1, N].\n\
-      -p, --ppattern [STRING]     specify the pattern mask to use to generate the PDB. The pattern consist only of characters\n\
-                                  '*' and '-', where the first indicates that the i-th symbol in the goal is abstracted, \n\
-                                  whereas the latter indicates that the symbols is preserved\n\
-      -c, --cpattern [STRING]     specify the pattern mask to use to traverse the abstract space. It is defined like --pattern\n\
-                                  and must be either a superset or equal to the ppattern.\n\
-      -r, --variant  [STRING]     Variant of the n-Pancake to consider. Choices are {unit, heavy-cost}. By default, unit is used\n\
+      -f, --file     [STRING]    pattern database filename\n\
+      -g, --goal     [STRING]    explicit representation of the goal state with a blank separated list of digits\n\
+                                 in the range [1, N].\n\
+      -p, --ppattern [STRING]    specify the pattern mask to use to generate the PDB. The pattern consist only of characters\n\
+                                 '*' and '-', where the former indicates that the i-th symbol in the goal is abstracted, \n\
+                                 whereas the latter indicates that the i-th symbol is preserved\n\
+      -r, --variant  [STRING]    Variant of the n-Pancake to consider. Choices are {unit, heavy-cost}. By default, unit is used\n\
 \n\
  Optional arguments:\n\
+      -c, --cpattern [STRING]    specify the pattern mask to use to traverse the abstract space. It is defined like --pattern\n\
+                                 and must be either a superset or equal to the ppattern. It equals, by default, the ppattern\n\
       -D, --no-doctor            If given, the automated error checking is disabled. Otherwise, the PDB is verified for\n\
                                  correctness\n\
  Misc arguments:\n\

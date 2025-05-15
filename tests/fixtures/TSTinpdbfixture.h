@@ -78,9 +78,6 @@ protected:
             cost = (pattern[i] == '*' && goal[i] < cost) ? goal[i] : cost;
         }
 
-        // in case that a true default cost has been computed, return it;
-        // otherwise, return the value of the lowest symbol in the goal even if
-        // it has been abstracted
         return cost;
     }
 };

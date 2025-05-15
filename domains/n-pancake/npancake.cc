@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -175,6 +176,11 @@ int main (int argc, char** argv) {
     cout << " variant  : " << variant << endl;
     cout << " -------------------------------------------------------------" << endl << endl;
 
+    // set the variant and default cost that corresponds to it and the selected
+    // pattern, which should be the c-pattern, the one used during the search
+
+   
+
     /* !------------------------- PDB GENERATION --------------------------! */
 
     // create an output PDB and generate it
@@ -220,6 +226,26 @@ int main (int argc, char** argv) {
     cout << endl;
     return (EXIT_SUCCESS);
 }
+
+// given a pattern defined with respect to a goal, get the default cost defined
+// as the minimum value among the symbols being abstracted. Obviously, if all
+// symbols are abstracted, then the minimum integer defined in the goal is
+// returned as the default cost
+pdb::pdbval_t get_default_cost (const vector<int>& goal, const string pattern) {
+
+    // the default cost is defined as the cost of the minimum symbol among those
+    // abstracted
+    pdb::pdbval_t cost = std::numeric_limits<pdb::pdbval_t>::max();
+    for (auto i = 0 ; i < int (goal.size ()) ; i++) {
+
+        // Update the default cost if this symbol is abstracted and its value is
+        // less than the incumbent value
+        cost = (pattern[i] == '*' && goal[i] < cost) ? goal[i] : cost;
+    }
+
+    return cost;
+}
+
 
 // Set all the option flags according to the switches specified. Return the
 // index of the first non-option argument

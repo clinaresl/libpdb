@@ -565,6 +565,33 @@ TEST_F (OutPDBFixture, NPancakeHeavyCostMaxWrite) {
     }
 }
 
+// check that the generation of MAX PDBs correctly detects the case out of
+// bounds returning an exception in the heavy-cost variant of the N-Pancake.
+// Note it is not possible to run this test for the unit variant because the
+// default cost is not used in that case
+// ----------------------------------------------------------------------------
+TEST_F (OutPDBFixture, NPancakeHeavyCostGenerationOutOfRange) {
+
+    // Set the unit variant with a default cost equal to 150, enough to exceed
+    // the range of pdbval_t
+    npancake_t::init (npancake_variant::heavy_cost, 150);
+
+    // Use pancakes of length 8
+    auto length = 8;
+
+    // create a goal with length symbols explicitly given
+    auto goal = succListInt (length);
+
+    // consider simply the case that preserves the first symbol in the goal
+    // state
+    string ipattern = "-" + string (length-1, '*');
+
+    // in the n-pancake both the ppattern and the cpattern are equal
+    pdb::outpdb<pdb::node_t<npancake_t>> pdb (pdb::pdb_mode::max, goal, ipattern, ipattern);
+
+    // and generate the pdb. Check that a runtime_error is generated
+    EXPECT_THROW (pdb.generate (), runtime_error);
+ }
 
 
 // Local Variables:

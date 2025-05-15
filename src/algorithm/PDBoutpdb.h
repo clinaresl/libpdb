@@ -123,12 +123,16 @@ namespace pdb {
 
         // generate a PDB with the minimum cost to reach the goal defined in
         // this instance from every abstract state as given in the ppatern used
-        // to create this instance. The resulting PDB is internallly stored.
+        // to create this instance. The resulting PDB is internallly stored. To
+        // write it down to a file use 'write'
         //
         // If cpattern induces a superset of the abstract state space induced by
         // ppatern, then the resulting PDB contains the minimum cost among all
         // entries in the state space induced by cpattern that are mapped to the
         // same abstract state in the state space induced by ppatern.
+        //
+        // If the cost of an abstract state exceeds the range of pdbval_t, then
+        // a runtime_error is immediately raised
         void generate () {
 
             // start the chrono
@@ -219,6 +223,12 @@ namespace pdb {
 
                         // then do not add it to the open list
                         continue;
+                    }
+
+                    // before continuing ensure that the g-value of the child
+                    // does not exceed the max value of pdbval_t
+                    if (std::numeric_limits<pdbval_t>::max() - node.get_g () < g) {
+                        throw std::runtime_error (" [outpdb.generate] g(child) out of range");
                     }
 
                     // otherwise, add it to open

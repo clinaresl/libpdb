@@ -132,10 +132,10 @@ public:
         return _perm != right.get_perm ();
     }
 
-    // get the contents of the i-th location. In case i is out of bounds the
-    // results are undefined
+    // get the contents of the i-th location. In case i is out of bounds an
+    // exception is raised
     int operator[](int i) const {
-        return _perm[i];
+        return _perm.at (i);
     }
 
     friend std::ostream& operator<<(std::ostream& stream, const npancake_t& right) {

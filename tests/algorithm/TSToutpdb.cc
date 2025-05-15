@@ -50,44 +50,46 @@ TEST_F (OutPDBFixture, Empty) {
 
 // check that MAX PDBs are correctly generated in the N-Pancake domain
 // ----------------------------------------------------------------------------
-TEST_F (OutPDBFixture, NPancakeMaxGeneration) {
+TEST_F (OutPDBFixture, NPancakeUnitMaxGeneration) {
 
-    // Use pancakes of length between 4 and 8
-    for (auto length = 8 ; length <= 8 ; length++) {
+    // Set the unit variant with a default cost equal to one
+    npancake_t::init (npancake_variant::unit, 1);
 
-        // create a goal with length symbols explicitly given
-        auto goal = succListInt (length);
+    // Use pancakes of length 8
+    auto length = 8;
 
-        // test all possible patterns with at least 1 symbol and up to length-1
-        // symbols being preserved
-        for (auto nbsymbols = 1 ; nbsymbols <= length-1 ; nbsymbols++) {
+    // create a goal with length symbols explicitly given
+    auto goal = succListInt (length);
 
-            // compute all patterns with length symbols, nbsymbols of them being
-            // preserved
-            auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
+    // test all possible patterns with at least 1 symbol and up to length-1
+    // symbols being preserved
+    for (auto nbsymbols = 1 ; nbsymbols <= length-1 ; nbsymbols++) {
 
-            // test every pattern separately
-            for (auto ipattern : patterns) {
+        // compute all patterns with length symbols, nbsymbols of them being
+        // preserved
+        auto patterns = generatePatterns (nbsymbols, length-nbsymbols);
 
-                // in the n-pancake both the ppattern and the cpattern are equal
-                pdb::outpdb<pdb::node_t<npancake_t>> pdb (pdb::pdb_mode::max, goal, ipattern, ipattern);
+        // test every pattern separately
+        for (auto ipattern : patterns) {
 
-                // and generate the pdb
-                pdb.generate ();
+            // in the n-pancake both the ppattern and the cpattern are equal
+            pdb::outpdb<pdb::node_t<npancake_t>> pdb (pdb::pdb_mode::max, goal, ipattern, ipattern);
 
-                // and verify that the PDB has been correctly generated
-                if (!pdb.doctor ()) {
-                    cout << " Doctor: " << pdb.get_error_message () << endl; cout.flush ();
-                    cout << "         Address space: " << pdb.size () << endl; cout.flush ();
-                    cout << "         # expansions : " << pdb.get_nbexpansions () << endl; cout.flush ();
-                    cout << "         ipattern     : " << ipattern << endl; cout.flush ();
-                    ASSERT_TRUE (false);
-                }
+            // and generate the pdb
+            pdb.generate ();
 
-                // finally, check that the size of the PDB is equal to the size
-                // of the abstract state space being traversed
-                ASSERT_EQ (pdb.size (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
+            // and verify that the PDB has been correctly generated
+            if (!pdb.doctor ()) {
+                cout << " Doctor: " << pdb.get_error_message () << endl; cout.flush ();
+                cout << "         Address space: " << pdb.size () << endl; cout.flush ();
+                cout << "         # expansions : " << pdb.get_nbexpansions () << endl; cout.flush ();
+                cout << "         ipattern     : " << ipattern << endl; cout.flush ();
+                ASSERT_TRUE (false);
             }
+
+            // finally, check that the size of the PDB is equal to the size
+            // of the abstract state space being traversed
+            ASSERT_EQ (pdb.size (), pdb::pdb_t<pdb::node_t<npancake_t>>::address_space (ipattern));
         }
     }
 }
@@ -95,7 +97,11 @@ TEST_F (OutPDBFixture, NPancakeMaxGeneration) {
 // Verify that data is *seemingly* well computed, i.e., that a PDB preserving
 // all symbols produces g-value which are either larger or equal than other PDBs
 // which abstract a positive number of symbols.
-TEST_F (OutPDBFixture, NPancakeDominance) {
+// ----------------------------------------------------------------------------
+TEST_F (OutPDBFixture, NPancakeUnitDominance) {
+
+    // Set the unit variant with a default cost equal to one
+    npancake_t::init (npancake_variant::unit, 1);
 
     // Use pancakes of length 8
     auto length = 8;
@@ -163,11 +169,12 @@ TEST_F (OutPDBFixture, NPancakeDominance) {
     }
 }
 
-
-
 // check that MAX PDBs can be randomly accesed and updated
 // ----------------------------------------------------------------------------
-TEST_F (OutPDBFixture, NPancakeMaxRandAccess) {
+TEST_F (OutPDBFixture, NPancakeUnitMaxRandAccess) {
+
+    // Set the unit variant with a default cost equal to one
+    npancake_t::init (npancake_variant::unit, 1);
 
     // Use pancakes of length between 4 and 8
     for (auto length = 8 ; length <= 8 ; length++) {
@@ -227,7 +234,10 @@ TEST_F (OutPDBFixture, NPancakeMaxRandAccess) {
 
 // check that MAX PDBs are correctly generated in the N-Pancake domain
 // ----------------------------------------------------------------------------
-TEST_F (OutPDBFixture, NPancakeMaxWrite) {
+TEST_F (OutPDBFixture, NPancakeUnitMaxWrite) {
+
+    // Set the unit variant with a default cost equal to one
+    npancake_t::init (npancake_variant::unit, 1);
 
     // Use pancakes of length between 8
     int length = 8;

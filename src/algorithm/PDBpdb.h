@@ -76,8 +76,8 @@ namespace pdb {
         // pattern used for generating abstract states (p_pattern)
         pdb (pdb_mode mode,
              const std::vector<int>& goal,
-             const std::string_view cpattern,
-             const std::string_view ppattern) :
+             const std::string cpattern,
+             const std::string ppattern) :
             _goal         {                   goal },
             _c_pattern    {               cpattern },
             _p_pattern    {               ppattern },

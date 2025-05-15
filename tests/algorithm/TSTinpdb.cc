@@ -38,7 +38,11 @@ TEST_F (InPDBFixture, Empty) {
 }
 
 // check that MAX inPDBs have been correctly retrieved
-TEST_F (InPDBFixture, NPancakeMaxRead) {
+// ----------------------------------------------------------------------------
+TEST_F (InPDBFixture, NPancakeUnitMaxRead) {
+
+    // Set the unit variant with a default cost equal to one
+    npancake_t::init (npancake_variant::unit, 1);
 
     // Use pancakes of length between 8
     int length = 8;

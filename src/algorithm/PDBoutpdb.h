@@ -84,10 +84,10 @@ namespace pdb {
             }
         }
 
-        // return a vector of binary data with the contents of a string_view. In
-        // case any of the characters exceed the maximum value for uint8_t, an
+        // return a vector of binary data with the contents of a string. In case
+        // any of the characters exceed the maximum value for uint8_t, an
         // exception is raised
-        void _sv_to_binary (const std::string_view data,
+        void _sv_to_binary (const std::string data,
                             std::vector<uint8_t>& result) {
 
             for (const auto item: data) {
@@ -105,8 +105,8 @@ namespace pdb {
         // (p_pattern) and also the one used to search (c_pattern)
         outpdb (pdb_mode mode,
                 const std::vector<int>& goal,
-                const std::string_view cpattern,
-                const std::string_view ppattern) :
+                const std::string cpattern,
+                const std::string ppattern) :
             pdb<node_t<T>>(mode, goal, cpattern, ppattern),
             _nbexpansions              {                       0 }
             { }

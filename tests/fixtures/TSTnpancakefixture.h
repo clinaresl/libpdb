@@ -62,7 +62,7 @@ protected:
 
         std::vector<std::string> result;
 
-        while ( result.size () < n) {
+        while ( n > int (result.size ()) ) {
 
             // generate a random pattern
             std::string patt;

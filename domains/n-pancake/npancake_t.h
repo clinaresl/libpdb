@@ -65,7 +65,7 @@ private:
     // arbitrary-cost domains, the default cost is defined as the cost of an
     // operator involving an abstracted symbol, by default 1. It can be given in
     // the init procedure
-    static int _default_cost;
+    static pdb::pdbval_t _default_cost;
 
     // methods
 
@@ -157,7 +157,7 @@ public:
     // compute the descendants of any state and, in case the heavy-variant has
     // been selected, it is mandatory to provide the default cost
     static void init (const npancake_variant variant = npancake_variant::unit,
-                      const int default_cost=1) {
+                      const pdb::pdbval_t default_cost=1) {
 
         // copy the domain variant
         npancake_t::_variant = variant;
@@ -186,7 +186,7 @@ public:
         for (auto i=1; i < _n; i++) {
 
             // compute the cost of this operator
-            int g = 1;
+            pdb::pdbval_t g = 1;
             if (_variant == npancake_variant::heavy_cost) {
                 if (i==_n-1) {
 

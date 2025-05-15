@@ -51,6 +51,7 @@ static struct option const long_options[] =
     {NULL, 0, NULL, 0}
 };
 
+pdb::pdbval_t default_cost (const vector<int>& goal, const string pattern);
 static int decode_switches (int argc, char **argv,
                             string& filename, string& goal, string& ppattern, string& cpattern, string& variant,
                             bool& no_doctor, bool& want_verbose);
@@ -173,13 +174,25 @@ int main (int argc, char** argv) {
     cout << " goal     : "; print (goal); cout << endl;
     cout << " p-pattern: " << ppattern << endl;
     cout << " c-pattern: " << cpattern << endl;
-    cout << " variant  : " << variant << endl;
-    cout << " -------------------------------------------------------------" << endl << endl;
+    cout << " variant  : " << variant;
 
     // set the variant and default cost that corresponds to it and the selected
     // pattern, which should be the c-pattern, the one used during the search
+    if (variant == "unit") {
+        npancake_t::init (npancake_variant::unit, 1);
+    } else {
 
-   
+        // in case the selected variant is the heavy-cost then the default cost
+        // has to be computed. This is done wrt the c-pattern because that is
+        // the one used when searching in the abstract state space
+        pdb::pdbval_t cost = default_cost (goal, cpattern);
+        npancake_t::init (npancake_variant::heavy_cost, cost);
+
+        // and show this information on the console
+        cout << " (default cost: " << int (cost) << ")";
+    }
+    cout << endl;
+    cout << " -------------------------------------------------------------" << endl << endl;
 
     /* !------------------------- PDB GENERATION --------------------------! */
 
@@ -231,7 +244,7 @@ int main (int argc, char** argv) {
 // as the minimum value among the symbols being abstracted. Obviously, if all
 // symbols are abstracted, then the minimum integer defined in the goal is
 // returned as the default cost
-pdb::pdbval_t get_default_cost (const vector<int>& goal, const string pattern) {
+pdb::pdbval_t default_cost (const vector<int>& goal, const string pattern) {
 
     // the default cost is defined as the cost of the minimum symbol among those
     // abstracted

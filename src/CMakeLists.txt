@@ -2,6 +2,7 @@
 add_library (pdb
   pdb.h
   PDBdefs.h
+  gui/PDBprogress_t.h
   structs/PDBnode_t.h
   structs/PDBopen_t.h
   structs/PDBpdb_t.h

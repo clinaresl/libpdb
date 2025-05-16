@@ -198,10 +198,11 @@ int main (int argc, char** argv) {
 
     /* !------------------------- PDB GENERATION --------------------------! */
 
-    // create an output PDB and generate it
+    // create an output PDB and generate it showing a progress bar
     tstart = chrono::system_clock::now ();
     pdb::outpdb<pdb::node_t<npancake_t>> outpdb (pdb::pdb_mode::max, goal, cpattern, ppattern);
-    outpdb.generate ();
+    outpdb.generate (true);
+    cout << endl << endl;;
 
     // check whether the PDB has been correctly generated
     if (!no_doctor) {

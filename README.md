@@ -13,7 +13,7 @@ Tests have been created using the [Google Test
 Framework](https://github.com/google/googletest) which is necessary for both
 compiling and runing the tests, see below.designed using
 
-# Install #
+# Build #
 
 To download the code type the following:
 
@@ -39,10 +39,31 @@ To compile only the library do:
    $ make libpdb
 ```
 
-which generates a static library.
+which generates the shared library `src/libpdb.so`
 
 To generate an executable to solve instances in a specific domain use `make
 domain` where *domain* can be any of the following: `npancake` or `npuzzle`.
+
+# Install #
+
+To install the library in your filesystem, e.g., under `/usr/local`:
+
+``` sh
+    $ cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
+```
+
+Next, build it with:
+
+``` sh
+    $ cmake --build .
+```
+
+and finally install the files in your filesystem (presumably with *sudo* if the
+target directory requires root access):
+
+``` sh
+    $ cmake --install .
+```
 
 # Tests #
 

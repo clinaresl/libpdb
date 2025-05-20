@@ -28,6 +28,12 @@ install(TARGETS pdb
 configure_file(pdb.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pdb.h)
 install(FILES pdb.h DESTINATION include)
 
+# and also all the header files specified in pdb.h
+install(FILES PDBdefs.h DESTINATION include)
+install(DIRECTORY algorithm/ DESTINATION include/algorithm)
+install(DIRECTORY gui/ DESTINATION include/gui)
+install(DIRECTORY structs/ DESTINATION include/structs)
+
 # Optionally export targets for CMake find_package
 install(EXPORT pdb_targets
     FILE pdbConfig.cmake

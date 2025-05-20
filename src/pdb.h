@@ -18,6 +18,9 @@
 #define CMAKE_BUILD_CODE 1
 #define CMAKE_VERSION "1.0"
 
+// *** definitions
+#include "PDBdefs.h"
+
 // *** data structures
 
 #include "structs/PDBnode_t.h"
@@ -27,6 +30,9 @@
 // *** algorithms
 #include "algorithm/PDBinpdb.h"
 #include "algorithm/PDBoutpdb.h"
+
+// *** utils
+#include "gui/PDBprogress_t.h"
 
 #endif // _PDB_H_
 

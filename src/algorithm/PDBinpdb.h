@@ -141,6 +141,7 @@ namespace pdb {
                 _in_error = in_error_message::pdb_goal_could_not_be_read;
                 return pdboff_t (0);
             }
+            pdb<node_t<T>>::_goal.clear ();
             for (auto i = 0 ; i < length ; i++) {
                 pdb<node_t<T>>::_goal.push_back (int (vgoal[i]));
             }

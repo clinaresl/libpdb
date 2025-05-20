@@ -187,6 +187,18 @@ namespace pdb {
             // first, verify that both the goal and the pattern contain the same
             // number of items. Otherwise, raise a fatal exception immediately
             if (goal.size () != pattern.size ()) {
+                std::cerr << " Size of the goal: " << goal.size () << std::endl;
+                std::cerr << "\t";
+                for (auto i = 0 ; i < int (goal.size ()); i++) {
+                    std::cerr << goal[i] << " ";
+                }
+                std::cerr << std::endl;
+                std::cerr << " Size of the pattern: " << pattern.size () << std::endl;
+                std::cerr << "\t";
+                for (auto i = 0 ; i < int (pattern.size ()); i++) {
+                    std::cerr << pattern[i] << " ";
+                }
+                std::cerr << std::endl;
                 throw std::invalid_argument (" [init] The goal and the pattern have different size!");
             }
 

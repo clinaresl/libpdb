@@ -16,7 +16,7 @@
 // definitions
 #define CMAKE_BUILD_TYPE "Release"
 #define CMAKE_BUILD_CODE 1
-#define CMAKE_VERSION "1.0"
+#define PDB_VERSION "1.0"
 
 // *** definitions
 #include "PDBdefs.h"

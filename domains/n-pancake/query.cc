@@ -264,7 +264,7 @@ decode_switches (int argc, char **argv,
             want_verbose = true;
             break;
         case 'V':
-            cout << " query (n-pancake) " << CMAKE_VERSION << endl;
+            cout << " query (n-pancake) " << PDB_VERSION << endl;
             cout << " " << CMAKE_BUILD_TYPE << " Build Type" << endl << endl;
             exit (EXIT_SUCCESS);
         case 'h':
@@ -281,11 +281,11 @@ decode_switches (int argc, char **argv,
 static void
 usage (int status)
 {
-    cout << endl << " " << program_name << " tool used to query PDBs generated for the N-Puzzle" << endl << endl;
+    cout << endl << " " << program_name << " tool used to query PDBs generated for the N-Pancake" << endl << endl;
     cout << " Usage: " << program_name << " [OPTIONS]" << endl << endl;
     cout << "\
  Mandatory arguments:\n\
-      -f, --file     [STRING]  pattern database filename (s). If more than one is given, they have to be separated by\n\
+      -f, --file     [STRING]  pattern database filename(s). If more than one is given, they have to be separated by\n\
                                blanks (so that it is assumed that filenames contain no blanks), and the result of the\n\
                                query automatically combines the heuristic values accordingly, i.e., MAX PDBs return\n\
                                the max of all values, and ADD PDBs return the addition\n\

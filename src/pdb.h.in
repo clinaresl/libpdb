@@ -16,7 +16,7 @@
 // definitions
 #define CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
 #define CMAKE_BUILD_CODE @CMAKE_BUILD_CODE@
-#define CMAKE_VERSION "@CMAKE_PROJECT_VERSION@"
+#define PDB_VERSION "@CMAKE_PROJECT_VERSION@"
 
 // *** definitions
 #include "PDBdefs.h"

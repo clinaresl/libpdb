@@ -201,7 +201,7 @@ int main (int argc, char** argv) {
     // create an output PDB and generate it showing a progress bar
     tstart = chrono::system_clock::now ();
     pdb::outpdb<pdb::node_t<npancake_t>> outpdb (pdb::pdb_mode::max, goal, cpattern, ppattern);
-    outpdb.generate (true);
+    outpdb.generate (false);
     cout << endl << endl;;
 
     // check whether the PDB has been correctly generated
@@ -315,7 +315,7 @@ decode_switches (int argc, char **argv,
             want_verbose = true;
             break;
         case 'V':
-            cout << " pdb (n-pancake) " << CMAKE_VERSION << endl;
+            cout << " pdb (n-pancake) " << PDB_VERSION << endl;
             cout << " " << CMAKE_BUILD_TYPE << " Build Type" << endl << endl;
             exit (EXIT_SUCCESS);
         case 'h':
@@ -345,7 +345,7 @@ usage (int status)
       -r, --variant  [STRING]    Variant of the n-Pancake to consider. Choices are {unit, heavy-cost}. By default, unit is used\n\
 \n\
  Optional arguments:\n\
-      -c, --cpattern [STRING]    specify the pattern mask to use to traverse the abstract space. It is defined like --pattern\n\
+      -c, --cpattern [STRING]    specify the pattern mask to use to traverse the abstract space. It is defined like --ppattern\n\
                                  and must be either a superset or equal to the ppattern. It equals, by default, the ppattern\n\
       -D, --no-doctor            If given, the automated error checking is disabled. Otherwise, the PDB is verified for\n\
                                  correctness\n\
